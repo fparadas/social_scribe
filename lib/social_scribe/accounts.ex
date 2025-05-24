@@ -117,6 +117,15 @@ defmodule SocialScribe.Accounts do
     Repo.all(UserCredential)
   end
 
+  def list_user_credentials(user, where \\ []) do
+    query =
+      from c in UserCredential,
+        where: c.user_id == ^user.id,
+        where: ^where
+
+    Repo.all(query)
+  end
+
   @doc """
   Gets a single user_credential.
 
@@ -245,7 +254,7 @@ defmodule SocialScribe.Accounts do
     end
   end
 
-  defp find_or_create_user_credential(user, profile, token_data) do
+  def find_or_create_user_credential(user, profile, token_data) do
     case get_user_credential(user, "google", profile.sub) do
       nil ->
         create_user_credential(%{
@@ -255,7 +264,8 @@ defmodule SocialScribe.Accounts do
           token: token_data.access_token,
           refresh_token: token_data.refresh_token,
           expires_at:
-            DateTime.add(DateTime.utc_now(), token_data.refresh_token_expires_in, :second)
+            DateTime.add(DateTime.utc_now(), token_data.refresh_token_expires_in, :second),
+          email: profile.email
         })
 
       %UserCredential{} = credential ->

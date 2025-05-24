@@ -8,16 +8,16 @@
         v{Application.spec(:phoenix, :vsn)}
       </p>
     </div>
-    <div class="flex items-center gap-4 font-semibold leading-6 text-zinc-900">
+    <div class="flex items-center gap-4 font-semibold leading-6 text-zinc-200">
       <ul class="relative z-10 flex items-center gap-4 px-4 sm:px-6 lg:px-8 justify-end">
         <%= if assigns[:current_user] do %>
-          <li class="text-[0.8125rem] leading-6 text-zinc-900">
+          <li class="text-[0.8125rem] leading-6 text-zinc-200">
             {@current_user.email}
           </li>
           <li>
             <.link
               href={~p"/users/settings"}
-              class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
+              class="text-[0.8125rem] leading-6 text-zinc-200 font-semibold hover:text-zinc-400"
             >
               Settings
             </.link>
@@ -26,7 +26,7 @@
             <.link
               href={~p"/users/log_out"}
               method="delete"
-              class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
+              class="text-[0.8125rem] leading-6 text-zinc-200 font-semibold hover:text-zinc-400"
             >
               Log out
             </.link>
@@ -35,7 +35,7 @@
           <li>
             <.link
               href={@oauth_google_url}
-              class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
+              class="text-[0.8125rem] leading-6 text-zinc-200 font-semibold hover:text-zinc-400"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"

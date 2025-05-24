@@ -43,7 +43,8 @@ defmodule SocialScribe.AccountsFixtures do
         provider: "some provider",
         refresh_token: "some refresh_token",
         token: "some token",
-        uid: "some uid"
+        uid: "some uid",
+        email: "some email"
       })
       |> SocialScribe.Accounts.create_user_credential()
 
