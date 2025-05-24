@@ -57,7 +57,7 @@ defmodule SocialScribeWeb.Router do
     live_session :require_authenticated_user,
       on_mount: [{SocialScribeWeb.UserAuth, :ensure_authenticated}] do
       # TODO: Add settings page
-      live "/users/settings", UserSettingsLive, :edit
+      live "/users/settings", UserSettingsLive
     end
   end
 

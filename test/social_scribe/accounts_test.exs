@@ -157,6 +157,21 @@ defmodule SocialScribe.AccountsTest do
     end
   end
 
+  describe "list_user_credentials/2" do
+    test "returns all user_credentials" do
+      user = user_fixture()
+      user_credential = user_credential_fixture(%{user_id: user.id})
+      assert Accounts.list_user_credentials(user) == [user_credential]
+    end
+
+    test "returns user_credentials filtered by provider" do
+      user = user_fixture()
+      user_credential = user_credential_fixture(%{user_id: user.id, provider: "google"})
+      assert Accounts.list_user_credentials(user, provider: "google") == [user_credential]
+      assert Accounts.list_user_credentials(user, provider: "facebook") == []
+    end
+  end
+
   describe "user_credentials" do
     alias SocialScribe.Accounts.UserCredential
 
@@ -191,7 +206,8 @@ defmodule SocialScribe.AccountsTest do
         uid: "some uid",
         provider: "some provider",
         refresh_token: "some refresh_token",
-        expires_at: ~U[2025-05-23 15:01:00Z]
+        expires_at: ~U[2025-05-23 15:01:00Z],
+        email: existing_user.email
       }
 
       assert {:ok, %UserCredential{} = user_credential} =
@@ -322,6 +338,38 @@ defmodule SocialScribe.AccountsTest do
       assert Repo.aggregate(Accounts.User, :count, :id) == 1
       credential = Repo.get_by!(UserCredential, uid: "google-uid-fresh")
       assert credential.user_id == new_user.id
+    end
+  end
+
+  describe "find_or_create_user_credential/3" do
+    @tag :google_auth
+    test "when the user has previously logged in with Google, it finds the existing user" do
+      google_profile = %{
+        sub: "google-uid-12345",
+        email: "existing@example.com",
+        name: "Existing User"
+      }
+
+      existing_user = user_fixture(%{email: google_profile.email})
+
+      _user_credential =
+        user_credential_fixture(%{
+          uid: google_profile.sub,
+          provider: "google",
+          user_id: existing_user.id
+        })
+
+      token_data = %{
+        access_token: "test-token",
+        refresh_token: "test-refresh",
+        refresh_token_expires_in: 3600
+      }
+
+      assert {:ok, found_credential} =
+               Accounts.find_or_create_user_credential(existing_user, google_profile, token_data)
+
+      assert found_credential.user_id == existing_user.id
+      assert Repo.aggregate(Accounts.User, :count, :id) == 1
     end
   end
 end
