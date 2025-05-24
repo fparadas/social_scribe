@@ -1,6 +1,8 @@
 defmodule SocialScribeWeb.Router do
   use SocialScribeWeb, :router
 
+  import SocialScribeWeb.UserAuth
+
   pipeline :browser do
     plug :accepts, ["html"]
     plug :fetch_session
@@ -8,6 +10,7 @@ defmodule SocialScribeWeb.Router do
     plug :put_root_layout, html: {SocialScribeWeb.Layouts, :root}
     plug :protect_from_forgery
     plug :put_secure_browser_headers
+    plug :fetch_current_user
   end
 
   pipeline :api do
@@ -16,8 +19,6 @@ defmodule SocialScribeWeb.Router do
 
   scope "/", SocialScribeWeb do
     pipe_through :browser
-
-    get "/", PageController, :home
   end
 
   # Other scopes may use custom stacks.
@@ -39,6 +40,37 @@ defmodule SocialScribeWeb.Router do
 
       live_dashboard "/dashboard", metrics: SocialScribeWeb.Telemetry
       forward "/mailbox", Plug.Swoosh.MailboxPreview
+    end
+  end
+
+  ## Authentication routes
+
+  scope "/", SocialScribeWeb do
+    pipe_through [:browser, :redirect_if_user_is_authenticated]
+
+    post "/users/log_in", UserSessionController, :create
+  end
+
+  scope "/", SocialScribeWeb do
+    pipe_through [:browser, :require_authenticated_user]
+
+    live_session :require_authenticated_user,
+      on_mount: [{SocialScribeWeb.UserAuth, :ensure_authenticated}] do
+      # TODO: Add settings page
+      live "/users/settings", UserSettingsLive, :edit
+    end
+  end
+
+  scope "/", SocialScribeWeb do
+    pipe_through [:browser]
+
+    delete "/users/log_out", UserSessionController, :delete
+
+    get "/auth/google/callback", GoogleAuthController, :callback
+
+    live_session :current_user,
+      on_mount: [{SocialScribeWeb.UserAuth, :mount_current_user}] do
+      live "/", HomeLive
     end
   end
 end
