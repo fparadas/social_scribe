@@ -32,6 +32,7 @@ defmodule SocialScribe.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
+      {:mox, "~> 1.2", only: :test},
       {:timex, "~> 3.0"},
       {:tesla, "~> 1.14"},
       {:ueberauth_google, "~> 0.12.1"},

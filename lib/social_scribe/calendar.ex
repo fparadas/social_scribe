@@ -4,6 +4,7 @@ defmodule SocialScribe.Calendar do
   """
 
   import Ecto.Query, warn: false
+
   alias SocialScribe.Repo
 
   alias SocialScribe.Calendar.CalendarEvent
