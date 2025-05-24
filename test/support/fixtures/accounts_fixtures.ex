@@ -28,4 +28,25 @@ defmodule SocialScribe.AccountsFixtures do
     [_, token | _] = String.split(captured_email.text_body, "[TOKEN]")
     token
   end
+
+  @doc """
+  Generate a user_credential.
+  """
+  def user_credential_fixture(attrs \\ %{}) do
+    user_id = attrs[:user_id] || user_fixture().id
+
+    {:ok, user_credential} =
+      attrs
+      |> Enum.into(%{
+        user_id: user_id,
+        expires_at: ~U[2025-05-23 15:01:00Z],
+        provider: "some provider",
+        refresh_token: "some refresh_token",
+        token: "some token",
+        uid: "some uid"
+      })
+      |> SocialScribe.Accounts.create_user_credential()
+
+    user_credential
+  end
 end

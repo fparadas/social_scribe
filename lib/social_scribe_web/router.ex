@@ -19,8 +19,6 @@ defmodule SocialScribeWeb.Router do
 
   scope "/", SocialScribeWeb do
     pipe_through :browser
-
-    get "/", PageController, :home
   end
 
   # Other scopes may use custom stacks.
@@ -72,5 +70,12 @@ defmodule SocialScribeWeb.Router do
     pipe_through [:browser]
 
     delete "/users/log_out", UserSessionController, :delete
+
+    get "/auth/google/callback", GoogleAuthController, :callback
+
+    live_session :current_user,
+      on_mount: [{SocialScribeWeb.UserAuth, :mount_current_user}] do
+      live "/", HomeLive
+    end
   end
 end

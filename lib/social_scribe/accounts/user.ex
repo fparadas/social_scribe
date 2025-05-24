@@ -9,6 +9,8 @@ defmodule SocialScribe.Accounts.User do
     field :current_password, :string, virtual: true, redact: true
     field :confirmed_at, :utc_datetime
 
+    has_many :user_credentials, SocialScribe.Accounts.UserCredential
+
     timestamps(type: :utc_datetime)
   end
 
@@ -40,6 +42,12 @@ defmodule SocialScribe.Accounts.User do
     |> cast(attrs, [:email, :password])
     |> validate_email(opts)
     |> validate_password(opts)
+  end
+
+  def oauth_registration_changeset(user, attrs, opts \\ []) do
+    user
+    |> cast(attrs, [:email])
+    |> validate_email(opts)
   end
 
   defp validate_email(changeset, opts) do

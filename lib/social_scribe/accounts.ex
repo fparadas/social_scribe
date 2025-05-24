@@ -6,7 +6,7 @@ defmodule SocialScribe.Accounts do
   import Ecto.Query, warn: false
   alias SocialScribe.Repo
 
-  alias SocialScribe.Accounts.{User, UserToken}
+  alias SocialScribe.Accounts.{User, UserToken, UserCredential}
 
   ## Database getters
 
@@ -100,5 +100,180 @@ defmodule SocialScribe.Accounts do
   def delete_user_session_token(token) do
     Repo.delete_all(UserToken.by_token_and_context_query(token, "session"))
     :ok
+  end
+
+  ## User Credentials
+
+  @doc """
+  Returns the list of user_credentials.
+
+  ## Examples
+
+      iex> list_user_credentials()
+      [%UserCredential{}, ...]
+
+  """
+  def list_user_credentials do
+    Repo.all(UserCredential)
+  end
+
+  @doc """
+  Gets a single user_credential.
+
+  Raises `Ecto.NoResultsError` if the User credential does not exist.
+
+  ## Examples
+
+      iex> get_user_credential!(123)
+      %UserCredential{}
+
+      iex> get_user_credential!(456)
+      ** (Ecto.NoResultsError)
+
+  """
+  def get_user_credential!(id), do: Repo.get!(UserCredential, id)
+
+  @doc """
+  Gets a user credential by user, provider, and uid.
+
+  ## Examples
+
+      iex> get_user_credential(user, "google", "google-uid-12345")
+      %UserCredential{}
+
+      iex> get_user_credential(user, "google", "google-uid-12345")
+      nil
+  """
+  def get_user_credential(user, provider, uid) do
+    Repo.get_by(UserCredential, user_id: user.id, provider: provider, uid: uid)
+  end
+
+  @doc """
+  Creates a user_credential.
+
+  ## Examples
+
+      iex> create_user_credential(%{field: value})
+      {:ok, %UserCredential{}}
+
+      iex> create_user_credential(%{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def create_user_credential(attrs \\ %{}) do
+    %UserCredential{}
+    |> UserCredential.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  @doc """
+  Updates a user_credential.
+
+  ## Examples
+
+      iex> update_user_credential(user_credential, %{field: new_value})
+      {:ok, %UserCredential{}}
+
+      iex> update_user_credential(user_credential, %{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def update_user_credential(%UserCredential{} = user_credential, attrs) do
+    user_credential
+    |> UserCredential.changeset(attrs)
+    |> Repo.update()
+  end
+
+  @doc """
+  Deletes a user_credential.
+
+  ## Examples
+
+      iex> delete_user_credential(user_credential)
+      {:ok, %UserCredential{}}
+
+      iex> delete_user_credential(user_credential)
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def delete_user_credential(%UserCredential{} = user_credential) do
+    Repo.delete(user_credential)
+  end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for tracking user_credential changes.
+
+  ## Examples
+
+      iex> change_user_credential(user_credential)
+      %Ecto.Changeset{data: %UserCredential{}}
+
+  """
+  def change_user_credential(%UserCredential{} = user_credential, attrs \\ %{}) do
+    UserCredential.changeset(user_credential, attrs)
+  end
+
+  ## Google Auth
+
+  def find_or_create_user_from_google(profile, token_data) do
+    Repo.transaction(fn ->
+      user = find_or_create_user(profile)
+
+      find_or_create_user_credential(user, profile, token_data)
+
+      user
+    end)
+  end
+
+  defp find_or_create_user(profile) do
+    case get_user_by_google_uid(profile.sub) do
+      %User{} = user ->
+        user
+
+      nil ->
+        case get_user_by_email(profile.email) do
+          %User{} = user ->
+            user
+
+          nil ->
+            %User{}
+            |> User.oauth_registration_changeset(%{
+              email: profile.email
+            })
+            |> Repo.insert!()
+        end
+    end
+  end
+
+  defp find_or_create_user_credential(user, profile, token_data) do
+    case get_user_credential(user, "google", profile.sub) do
+      nil ->
+        create_user_credential(%{
+          user_id: user.id,
+          provider: "google",
+          uid: profile.sub,
+          token: token_data.access_token,
+          refresh_token: token_data.refresh_token,
+          expires_at:
+            DateTime.add(DateTime.utc_now(), token_data.refresh_token_expires_in, :second)
+        })
+
+      %UserCredential{} = credential ->
+        update_user_credential(credential, %{
+          token: token_data.access_token,
+          refresh_token: token_data.refresh_token,
+          expires_at:
+            DateTime.add(DateTime.utc_now(), token_data.refresh_token_expires_in, :second)
+        })
+    end
+  end
+
+  defp get_user_by_google_uid(uid) do
+    from(c in UserCredential,
+      where: c.provider == "google" and c.uid == ^uid,
+      join: u in assoc(c, :user),
+      select: u
+    )
+    |> Repo.one()
   end
 end
