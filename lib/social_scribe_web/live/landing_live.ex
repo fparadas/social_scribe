@@ -3,15 +3,6 @@ defmodule SocialScribeWeb.LandingLive do
 
   @impl true
   def mount(_params, _session, socket) do
-    oauth_google_url =
-      ElixirAuthGoogle.generate_oauth_url(SocialScribeWeb.Endpoint.url(), %{
-        access_type: "offline"
-      })
-
-    socket =
-      socket
-      |> assign(oauth_google_url: oauth_google_url)
-
     {:ok, socket}
   end
 
@@ -27,7 +18,7 @@ defmodule SocialScribeWeb.LandingLive do
           Social Scribe automatically transcribes your meetings, generates insightful follow-up emails, and crafts engaging social media posts. Save time, amplify your message.
         </p>
         <.link
-          href={@oauth_google_url}
+          href={~p"/auth/google"}
           class="bg-white text-purple-700 font-bold py-4 px-10 rounded-lg shadow-xl hover:bg-slate-100 transition duration-300 ease-in-out transform hover:scale-105 text-lg"
         >
           Get Started for Free

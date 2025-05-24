@@ -38,8 +38,3 @@ config :phoenix, :plug_init_mode, :runtime
 # Enable helpful, but potentially expensive runtime checks
 config :phoenix_live_view,
   enable_expensive_runtime_checks: true
-
-config :elixir_auth_google,
-  client_id: "631770888008-6n0oruvsm16kbkqg6u76p5cv5kfkcekt.apps.googleusercontent.com",
-  client_secret: "MHxv6-RGF5nheXnxh1b0LNDq",
-  httpoison_mock: true

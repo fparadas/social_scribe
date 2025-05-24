@@ -45,6 +45,13 @@ defmodule SocialScribeWeb.Router do
 
   ## Authentication routes
 
+  scope "/auth", SocialScribeWeb do
+    pipe_through [:browser]
+
+    get "/:provider", AuthController, :request
+    get "/:provider/callback", AuthController, :callback
+  end
+
   scope "/", SocialScribeWeb do
     pipe_through [:browser, :redirect_if_user_is_authenticated]
 
@@ -69,8 +76,6 @@ defmodule SocialScribeWeb.Router do
     pipe_through [:browser]
 
     delete "/users/log_out", UserSessionController, :delete
-
-    get "/auth/google/callback", GoogleAuthController, :callback
 
     live_session :current_user,
       on_mount: [{SocialScribeWeb.UserAuth, :mount_current_user}] do

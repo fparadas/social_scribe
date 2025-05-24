@@ -1,0 +1,57 @@
+<div class="container mx-auto px-4 py-8 md:py-12">
+  <h1 class="text-3xl md:text-4xl font-bold mb-2 text-slate-800 ">
+    {@page_title}
+  </h1>
+  <p class="text-slate-500  mb-8">
+    Your unified schedule from all connected Google accounts.
+  </p>
+
+  <%= if @loading do %>
+    <div class="text-center p-8">
+      <p class="text-slate-600 ">
+        Syncing your calendars for the first time...
+      </p>
+    </div>
+  <% end %>
+
+  <%= if not @loading and Enum.empty?(@events) do %>
+    <%!-- Empty state from previous turn --%>
+  <% end %>
+
+  <%= if not @loading and not Enum.empty?(@events) do %>
+    <div class="space-y-6">
+      <div :for={event <- @events} class="bg-white  shadow-xl rounded-lg overflow-hidden">
+        <div class="p-5 md:p-6">
+          <div class="flex flex-col sm:flex-row justify-between sm:items-start">
+            <div>
+              <h3 class="text-xl font-semibold text-indigo-600  mb-1">
+                {event.summary}
+              </h3>
+              <p class="text-sm text-slate-500  mb-2">
+                {Timex.format!(event.start_time, "%m/%d/%Y, %H:%M:%S", :strftime)}
+              </p>
+            </div>
+            <div class="mt-4 sm:mt-0 sm:ml-4 flex-shrink-0">
+              <div class="flex items-center space-x-3">
+                <span class="text-sm font-medium text-slate-700 ">
+                  Record Meeting?
+                </span>
+                <label class="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    class="sr-only peer"
+                    phx-click="toggle_record"
+                    phx-value-id={event.id}
+                    checked={event.record_meeting}
+                  />
+                  <div class="w-11 h-6 bg-gray-200 rounded-full peer  peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600">
+                  </div>
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  <% end %>
+</div>

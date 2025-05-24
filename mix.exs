@@ -32,7 +32,10 @@ defmodule SocialScribe.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
-      {:elixir_auth_google, "~> 1.6.9"},
+      {:timex, "~> 3.0"},
+      {:tesla, "~> 1.14"},
+      {:ueberauth_google, "~> 0.12.1"},
+      {:ueberauth, "~> 0.10.8"},
       {:bcrypt_elixir, "~> 3.0"},
       {:phoenix, "~> 1.7.21"},
       {:phoenix_ecto, "~> 4.5"},
