@@ -4,7 +4,9 @@ defmodule SocialScribe.Accounts do
   """
 
   import Ecto.Query, warn: false
+
   alias SocialScribe.Repo
+  alias Ueberauth.Auth
 
   alias SocialScribe.Accounts.{User, UserToken, UserCredential}
 
@@ -222,68 +224,81 @@ defmodule SocialScribe.Accounts do
     UserCredential.changeset(user_credential, attrs)
   end
 
-  ## Google Auth
+  ## OAuth
 
-  def find_or_create_user_from_google(profile, token_data) do
+  def find_or_create_user_from_oauth(%Auth{} = auth) do
     Repo.transaction(fn ->
-      user = find_or_create_user(profile)
+      user = find_or_create_user(auth.provider, auth.uid, auth.info.email) |> dbg()
 
-      find_or_create_user_credential(user, profile, token_data)
+      find_or_create_user_credential(user, auth) |> dbg()
 
       user
     end)
   end
 
-  defp find_or_create_user(profile) do
-    case get_user_by_google_uid(profile.sub) do
+  defp find_or_create_user(provider, uid, email) do
+    case get_user_by_oauth_uid(Atom.to_string(provider), uid) do
       %User{} = user ->
         user
 
       nil ->
-        case get_user_by_email(profile.email) do
+        case get_user_by_email(email) do
           %User{} = user ->
             user
 
           nil ->
             %User{}
             |> User.oauth_registration_changeset(%{
-              email: profile.email
+              email: email
             })
             |> Repo.insert!()
         end
     end
   end
 
-  def find_or_create_user_credential(user, profile, token_data) do
-    case get_user_credential(user, "google", profile.sub) do
+  def find_or_create_user_credential(user, %Auth{} = auth) do
+    case dbg(get_user_credential(user, Atom.to_string(auth.provider), auth.uid)) do
       nil ->
-        create_user_credential(%{
-          user_id: user.id,
-          provider: "google",
-          uid: profile.sub,
-          token: token_data.access_token,
-          refresh_token: token_data.refresh_token,
-          expires_at:
-            DateTime.add(DateTime.utc_now(), token_data.refresh_token_expires_in, :second),
-          email: profile.email
-        })
+        create_user_credential(format_credential_attrs(user, auth))
 
       %UserCredential{} = credential ->
-        update_user_credential(credential, %{
-          token: token_data.access_token,
-          refresh_token: token_data.refresh_token,
-          expires_at:
-            DateTime.add(DateTime.utc_now(), token_data.refresh_token_expires_in, :second)
-        })
+        update_user_credential(credential, format_credential_attrs(user, auth))
     end
   end
 
-  defp get_user_by_google_uid(uid) do
+  defp get_user_by_oauth_uid(provider, uid) do
     from(c in UserCredential,
-      where: c.provider == "google" and c.uid == ^uid,
+      where: c.provider == ^provider and c.uid == ^uid,
       join: u in assoc(c, :user),
       select: u
     )
     |> Repo.one()
+  end
+
+  defp format_credential_attrs(user, %Auth{credentials: %{refresh_token: nil}} = auth) do
+    %{
+      user_id: user.id,
+      provider: to_string(auth.provider),
+      uid: auth.uid,
+      token: auth.credentials.token,
+      expires_at:
+        (auth.credentials.expires_at && DateTime.from_unix!(auth.credentials.expires_at)) ||
+          DateTime.add(DateTime.utc_now(), 3600, :second),
+      email: auth.info.email
+    }
+  end
+
+  defp format_credential_attrs(user, %Auth{} = auth) do
+    %{
+      user_id: user.id,
+      provider: to_string(auth.provider),
+      uid: auth.uid,
+      token: auth.credentials.token,
+      refresh_token: auth.credentials.refresh_token,
+      expires_at:
+        (auth.credentials.expires_at && DateTime.from_unix!(auth.credentials.expires_at)) ||
+          DateTime.add(DateTime.utc_now(), 3600, :second),
+      email: auth.info.email
+    }
   end
 end

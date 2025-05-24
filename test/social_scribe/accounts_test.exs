@@ -269,32 +269,33 @@ defmodule SocialScribe.AccountsTest do
     end
   end
 
-  describe "find_or_create_user_from_google/2" do
+  describe "find_or_create_user_from_oauth/1" do
     @tag :google_auth
     test "when the user has previously logged in with Google, it finds the existing user" do
-      google_profile = %{
-        sub: "google-uid-12345",
-        email: "existing@example.com",
-        name: "Existing User"
+      auth = %Ueberauth.Auth{
+        provider: :google,
+        uid: "google-uid-12345",
+        info: %Ueberauth.Auth.Info{
+          email: "existing@example.com",
+          name: "Existing User"
+        },
+        credentials: %Ueberauth.Auth.Credentials{
+          token: "test-token",
+          refresh_token: "test-refresh",
+          expires_at: DateTime.utc_now() |> DateTime.add(3600, :second) |> DateTime.to_unix()
+        }
       }
 
-      existing_user = user_fixture(%{email: google_profile.email})
+      existing_user = user_fixture(%{email: auth.info.email})
 
       _user_credential =
         user_credential_fixture(%{
-          uid: google_profile.sub,
-          provider: "google",
+          uid: auth.uid,
+          provider: to_string(auth.provider),
           user_id: existing_user.id
         })
 
-      # Create a mock token data map.
-      token_data = %{
-        access_token: "test-token",
-        refresh_token: "test-refresh",
-        refresh_token_expires_in: 3600
-      }
-
-      {:ok, found_user} = Accounts.find_or_create_user_from_google(google_profile, token_data)
+      {:ok, found_user} = Accounts.find_or_create_user_from_oauth(auth)
 
       assert found_user.id == existing_user.id
       assert Repo.aggregate(Accounts.User, :count, :id) == 1
@@ -302,74 +303,52 @@ defmodule SocialScribe.AccountsTest do
 
     @tag :google_auth
     test "when a user with the same email exists, it links the Google account to them" do
-      google_profile = %{sub: "google-uid-new", email: "existing@example.com"}
-
-      existing_user = user_fixture(%{email: google_profile.email})
-
-      token_data = %{
-        access_token: "test-token-2",
-        refresh_token: "test-refresh-2",
-        refresh_token_expires_in: 3600
+      auth = %Ueberauth.Auth{
+        provider: :google,
+        uid: "google-uid-new",
+        info: %Ueberauth.Auth.Info{
+          email: "existing@example.com"
+        },
+        credentials: %Ueberauth.Auth.Credentials{
+          token: "test-token-2",
+          refresh_token: "test-refresh-2",
+          expires_at: DateTime.utc_now() |> DateTime.add(3600, :second) |> DateTime.to_unix()
+        }
       }
 
-      {:ok, found_user} = Accounts.find_or_create_user_from_google(google_profile, token_data)
+      existing_user = user_fixture(%{email: auth.info.email})
+
+      {:ok, found_user} = Accounts.find_or_create_user_from_oauth(auth)
 
       assert found_user.id == existing_user.id
-      credential = Repo.get_by!(UserCredential, uid: "google-uid-new")
+      credential = Repo.get_by!(UserCredential, uid: auth.uid)
       assert credential.user_id == existing_user.id
       assert Repo.aggregate(Accounts.User, :count, :id) == 1
     end
 
     @tag :google_auth
     test "when no user exists, it creates a new user and credential" do
-      google_profile = %{sub: "google-uid-fresh", email: "new@example.com"}
-
-      token_data = %{
-        access_token: "test-token-3",
-        refresh_token: "test-refresh-3",
-        refresh_token_expires_in: 3600
+      auth = %Ueberauth.Auth{
+        provider: :google,
+        uid: "google-uid-fresh",
+        info: %Ueberauth.Auth.Info{
+          email: "new@example.com"
+        },
+        credentials: %Ueberauth.Auth.Credentials{
+          token: "test-token-3",
+          refresh_token: "test-refresh-3",
+          expires_at: DateTime.utc_now() |> DateTime.add(3600, :second) |> DateTime.to_unix()
+        }
       }
 
       assert Repo.aggregate(Accounts.User, :count, :id) == 0
 
-      {:ok, new_user} = Accounts.find_or_create_user_from_google(google_profile, token_data)
+      {:ok, new_user} = Accounts.find_or_create_user_from_oauth(auth)
 
       assert new_user.email == "new@example.com"
       assert Repo.aggregate(Accounts.User, :count, :id) == 1
-      credential = Repo.get_by!(UserCredential, uid: "google-uid-fresh")
+      credential = Repo.get_by!(UserCredential, uid: auth.uid)
       assert credential.user_id == new_user.id
-    end
-  end
-
-  describe "find_or_create_user_credential/3" do
-    @tag :google_auth
-    test "when the user has previously logged in with Google, it finds the existing user" do
-      google_profile = %{
-        sub: "google-uid-12345",
-        email: "existing@example.com",
-        name: "Existing User"
-      }
-
-      existing_user = user_fixture(%{email: google_profile.email})
-
-      _user_credential =
-        user_credential_fixture(%{
-          uid: google_profile.sub,
-          provider: "google",
-          user_id: existing_user.id
-        })
-
-      token_data = %{
-        access_token: "test-token",
-        refresh_token: "test-refresh",
-        refresh_token_expires_in: 3600
-      }
-
-      assert {:ok, found_credential} =
-               Accounts.find_or_create_user_credential(existing_user, google_profile, token_data)
-
-      assert found_credential.user_id == existing_user.id
-      assert Repo.aggregate(Accounts.User, :count, :id) == 1
     end
   end
 end
