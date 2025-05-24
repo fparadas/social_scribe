@@ -59,5 +59,15 @@
         </div>
       </div>
     <% end %>
+    <%= if Enum.empty?(@events) and not @loading do %>
+      <div class="text-center p-12 bg-white rounded-lg shadow-sm border border-slate-100">
+        <p class="text-lg font-medium text-slate-700 mb-2">
+          No events to display.
+        </p>
+        <p class="text-sm text-slate-500 italic">
+          Connect your calendar to see them here.
+        </p>
+      </div>
+    <% end %>
   </div>
 </div>
