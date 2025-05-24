@@ -51,13 +51,17 @@ defmodule SocialScribeWeb.Router do
     post "/users/log_in", UserSessionController, :create
   end
 
-  scope "/", SocialScribeWeb do
+  scope "/dashboard", SocialScribeWeb do
     pipe_through [:browser, :require_authenticated_user]
 
     live_session :require_authenticated_user,
-      on_mount: [{SocialScribeWeb.UserAuth, :ensure_authenticated}] do
-      # TODO: Add settings page
-      live "/users/settings", UserSettingsLive
+      on_mount: [
+        {SocialScribeWeb.UserAuth, :ensure_authenticated},
+        {SocialScribeWeb.LiveHooks, :assign_current_path}
+      ],
+      layout: {SocialScribeWeb.Layouts, :dashboard} do
+      live "/", HomeLive
+      live "/settings", UserSettingsLive
     end
   end
 
@@ -70,7 +74,7 @@ defmodule SocialScribeWeb.Router do
 
     live_session :current_user,
       on_mount: [{SocialScribeWeb.UserAuth, :mount_current_user}] do
-      live "/", HomeLive
+      live "/", LandingLive
     end
   end
 end

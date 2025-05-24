@@ -16,18 +16,18 @@ defmodule SocialScribeWeb.GoogleAuthController do
           {:ok, _credential} ->
             conn
             |> put_flash(:info, "Google account added successfully.")
-            |> redirect(to: ~p"/users/settings")
+            |> redirect(to: ~p"/dashboard/settings")
 
           {:error, _reason} ->
             conn
             |> put_flash(:error, "Could not add Google account.")
-            |> redirect(to: ~p"/users/settings")
+            |> redirect(to: ~p"/dashboard/settings")
         end
 
       {:error, _reason} ->
         conn
         |> put_flash(:error, "Could not authenticate with Google.")
-        |> redirect(to: ~p"/users/settings")
+        |> redirect(to: ~p"/dashboard/settings")
     end
   end
 
