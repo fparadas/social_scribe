@@ -51,17 +51,7 @@ defmodule SocialScribeWeb.Sidebar do
   attr :path, :string, required: true
 
   def sidebar_link(assigns) do
-    active =
-      case assigns.path do
-        path when path == assigns.current_path ->
-          true
-
-        path when path != "/dashboard" ->
-          String.contains?(assigns.current_path, assigns.path)
-
-        _ ->
-          false
-      end
+    active = assigns.current_path == assigns.path
 
     assigns = assign(assigns, :active, active)
 
