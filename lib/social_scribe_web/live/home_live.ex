@@ -2,7 +2,7 @@ defmodule SocialScribeWeb.HomeLive do
   use SocialScribeWeb, :live_view
 
   alias SocialScribe.Calendar
-  alias SocialScribe.GoogleCalendar
+  alias SocialScribe.CalendarSyncronizer
   require Logger
 
   @impl true
@@ -20,7 +20,7 @@ defmodule SocialScribeWeb.HomeLive do
 
   @impl true
   def handle_info(:sync_calendars, socket) do
-    GoogleCalendar.sync_events_for_user(socket.assigns.current_user)
+    CalendarSyncronizer.sync_events_for_user(socket.assigns.current_user)
 
     events = Calendar.list_upcoming_events(socket.assigns.current_user)
 

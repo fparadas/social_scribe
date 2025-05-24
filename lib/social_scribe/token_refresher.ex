@@ -5,6 +5,8 @@ defmodule SocialScribe.TokenRefresher do
 
   @google_token_url "https://oauth2.googleapis.com/token"
 
+  @behaviour SocialScribe.TokenRefresherApi
+
   def client do
     middlewares = [
       {Tesla.Middleware.FormUrlencoded,
@@ -15,7 +17,7 @@ defmodule SocialScribe.TokenRefresher do
     Tesla.client(middlewares)
   end
 
-  def refresh_google_token(refresh_token_string) do
+  def refresh_token(refresh_token_string) do
     client_id = Application.fetch_env!(:ueberauth, Ueberauth.Strategy.Google.OAuth)[:client_id]
 
     client_secret =
