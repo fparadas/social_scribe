@@ -98,8 +98,8 @@ defmodule SocialScribe.GoogleCalendar do
 
   defp sync_items(items, user_id, credential_id) do
     Enum.each(items, fn item ->
-      # We only sync confirmed events
-      if item["status"] == "confirmed" do
+      # We only sync meetings that have a zoom or google meet link for now
+      if String.contains?(Map.get(item, "location", ""), ".zoom.") || Map.get(item, "hangoutLink") do
         Calendar.create_or_update_calendar_event(parse_google_event(item, user_id, credential_id))
       end
     end)
