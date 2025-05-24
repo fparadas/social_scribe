@@ -12,7 +12,7 @@ defmodule SocialScribeWeb.HomeLive do
     socket =
       socket
       |> assign(:page_title, "Upcoming Meetings")
-      |> assign(:events, [])
+      |> assign(:events, Calendar.list_upcoming_events(socket.assigns.current_user))
       |> assign(:loading, true)
 
     {:ok, socket}
