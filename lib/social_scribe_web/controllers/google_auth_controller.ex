@@ -5,7 +5,7 @@ defmodule SocialScribeWeb.GoogleAuthController do
   alias SocialScribeWeb.UserAuth
 
   @doc """
-  `index/2` handles the callback from Google Auth API redirect.
+  `callback/2` handles the callback from Google Auth API redirect.
   """
   def callback(conn, %{"code" => code}) do
     case ElixirAuthGoogle.get_token(code, SocialScribeWeb.Endpoint.url()) do
