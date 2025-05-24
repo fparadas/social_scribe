@@ -25,8 +25,6 @@ defmodule SocialScribeWeb.AuthController do
         |> redirect(to: ~p"/dashboard/settings")
 
       {:error, reason} ->
-        dbg(reason)
-
         conn
         |> put_flash(:error, "Could not add Google account.")
         |> redirect(to: ~p"/dashboard/settings")

@@ -1,4 +1,8 @@
 defmodule SocialScribe.TokenRefresher do
+  @moduledoc """
+  Refreshes Google tokens.
+  """
+
   @google_token_url "https://oauth2.googleapis.com/token"
 
   def client do
