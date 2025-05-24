@@ -228,9 +228,9 @@ defmodule SocialScribe.Accounts do
 
   def find_or_create_user_from_oauth(%Auth{} = auth) do
     Repo.transaction(fn ->
-      user = find_or_create_user(auth.provider, auth.uid, auth.info.email) |> dbg()
+      user = find_or_create_user(auth.provider, auth.uid, auth.info.email)
 
-      find_or_create_user_credential(user, auth) |> dbg()
+      find_or_create_user_credential(user, auth)
 
       user
     end)
@@ -257,7 +257,7 @@ defmodule SocialScribe.Accounts do
   end
 
   def find_or_create_user_credential(user, %Auth{} = auth) do
-    case dbg(get_user_credential(user, Atom.to_string(auth.provider), auth.uid)) do
+    case get_user_credential(user, Atom.to_string(auth.provider), auth.uid) do
       nil ->
         create_user_credential(format_credential_attrs(user, auth))
 
