@@ -301,4 +301,24 @@ defmodule SocialScribe.Accounts do
       email: auth.info.email
     }
   end
+
+  @doc """
+  Updates a user credential's tokens.
+
+  ## Examples
+
+      iex> update_credential_tokens(user_credential, %{"access_token" => "new_token", "expires_in" => 3600})
+      {:ok, %UserCredential{}}
+  """
+  def update_credential_tokens(%UserCredential{} = credential, %{
+        "access_token" => token,
+        "expires_in" => expires_in
+      }) do
+    credential
+    |> UserCredential.changeset(%{
+      token: token,
+      expires_at: DateTime.add(DateTime.utc_now(), expires_in, :second)
+    })
+    |> Repo.update()
+  end
 end

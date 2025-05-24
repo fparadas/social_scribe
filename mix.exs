@@ -32,7 +32,7 @@ defmodule SocialScribe.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
-      {:gcal, "~> 1.0.3"},
+      {:timex, "~> 3.0"},
       {:tesla, "~> 1.14"},
       {:ueberauth_google, "~> 0.12.1"},
       {:ueberauth, "~> 0.10.8"},
