@@ -11,13 +11,19 @@ defmodule SocialScribe.AutomationsTest do
   import SocialScribe.AutomationsFixtures
 
   describe "automations" do
-    @invalid_attrs %{name: nil, description: nil, platform: nil, example: nil, is_active: nil}
+    @invalid_attrs %{
+      name: nil,
+      description: nil,
+      platform: nil,
+      example: nil,
+      is_active: nil
+    }
 
     test "list_active_user_automations/1 returns the list of active automations for a user" do
       user = user_fixture()
-      automation_1 = automation_fixture(%{user_id: user.id, is_active: true})
-      automation_2 = automation_fixture(%{user_id: user.id, is_active: true})
       _automation_3 = automation_fixture(%{user_id: user.id, is_active: false})
+      automation_1 = automation_fixture(%{user_id: user.id, is_active: true, platform: :linkedin})
+      automation_2 = automation_fixture(%{user_id: user.id, is_active: true, platform: :facebook})
       _automation_4 = automation_fixture(%{is_active: true})
 
       assert Automations.list_active_user_automations(user.id) == [automation_1, automation_2]
@@ -33,13 +39,24 @@ defmodule SocialScribe.AutomationsTest do
       assert Automations.get_automation!(automation.id) == automation
     end
 
+    test "can_create_automation?/2 returns true if the user has no active automations for the given platform" do
+      user = user_fixture()
+      assert Automations.can_create_automation?(user.id, :linkedin) == true
+    end
+
+    test "can_create_automation?/2 returns false if the user has an active automation for the given platform" do
+      user = user_fixture()
+      _automation = automation_fixture(%{user_id: user.id, platform: :linkedin, is_active: true})
+      assert Automations.can_create_automation?(user.id, :linkedin) == false
+    end
+
     test "create_automation/1 with valid data creates a automation" do
       user = user_fixture()
 
       valid_attrs = %{
         name: "some name",
         description: "some description",
-        platform: "some platform",
+        platform: :linkedin,
         example: "some example",
         is_active: true,
         user_id: user.id
@@ -48,7 +65,7 @@ defmodule SocialScribe.AutomationsTest do
       assert {:ok, %Automation{} = automation} = Automations.create_automation(valid_attrs)
       assert automation.name == "some name"
       assert automation.description == "some description"
-      assert automation.platform == "some platform"
+      assert automation.platform == :linkedin
       assert automation.example == "some example"
       assert automation.is_active == true
     end
@@ -63,7 +80,7 @@ defmodule SocialScribe.AutomationsTest do
       update_attrs = %{
         name: "some updated name",
         description: "some updated description",
-        platform: "some updated platform",
+        platform: :facebook,
         example: "some updated example",
         is_active: false
       }
@@ -73,9 +90,20 @@ defmodule SocialScribe.AutomationsTest do
 
       assert automation.name == "some updated name"
       assert automation.description == "some updated description"
-      assert automation.platform == "some updated platform"
+      assert automation.platform == :facebook
       assert automation.example == "some updated example"
       assert automation.is_active == false
+    end
+
+    test "update_automation/2 respects limit of one active automation per platform per user" do
+      user = user_fixture()
+      automation_1 = automation_fixture(%{user_id: user.id, platform: :linkedin, is_active: true})
+
+      _automation_2 =
+        automation_fixture(%{user_id: user.id, platform: :facebook, is_active: true})
+
+      assert {:error, %Ecto.Changeset{}} =
+               Automations.update_automation(automation_1, %{platform: :facebook})
     end
 
     test "update_automation/2 with invalid data returns error changeset" do

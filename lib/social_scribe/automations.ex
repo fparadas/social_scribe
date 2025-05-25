@@ -8,6 +8,7 @@ defmodule SocialScribe.Automations do
 
   alias SocialScribe.Automations.Automation
 
+  @max_automations_per_platform_per_user 1
   @doc """
   Returns the list of automations for a user.
   """
@@ -46,6 +47,17 @@ defmodule SocialScribe.Automations do
   def get_automation!(id), do: Repo.get!(Automation, id)
 
   @doc """
+  Checks if a user can create an automation for a given platform.
+  """
+  def can_create_automation?(user_id, platform) do
+    query =
+      from a in Automation,
+        where: a.user_id == ^user_id and a.platform == ^platform and a.is_active == true
+
+    Repo.aggregate(query, :count, :id) < @max_automations_per_platform_per_user
+  end
+
+  @doc """
   Creates a automation.
 
   ## Examples
@@ -58,10 +70,41 @@ defmodule SocialScribe.Automations do
 
   """
   def create_automation(attrs \\ %{}) do
-    %Automation{}
-    |> Automation.changeset(attrs)
-    |> Repo.insert()
+    attrs = sanitize_attrs(attrs)
+    changeset = Automation.changeset(%Automation{}, attrs)
+
+    cond do
+      is_nil(Map.get(attrs, :user_id)) ->
+        {:error, Ecto.Changeset.add_error(changeset, :user_id, "User ID is required")}
+
+      is_nil(Map.get(attrs, :platform)) ->
+        {:error, Ecto.Changeset.add_error(changeset, :platform, "Platform is required")}
+
+      can_create_automation?(attrs.user_id, attrs.platform) ->
+        changeset
+        |> Repo.insert()
+
+      true ->
+        {:error,
+         Ecto.Changeset.add_error(
+           changeset,
+           :platform,
+           "you can only have one active automation per platform",
+           validation: :max_automations_per_platform_per_user
+         )}
+    end
   end
+
+  defp sanitize_attrs(attrs) do
+    attrs
+    |> Enum.map(&sanitize_keys/1)
+    |> Map.new()
+  end
+
+  defp sanitize_keys({key, value}) when is_atom(key), do: {key, value}
+
+  defp sanitize_keys({key, value}) when is_binary(value),
+    do: {String.to_existing_atom(key), value}
 
   @doc """
   Updates a automation.
@@ -76,9 +119,49 @@ defmodule SocialScribe.Automations do
 
   """
   def update_automation(%Automation{} = automation, attrs) do
-    automation
-    |> Automation.changeset(attrs)
-    |> Repo.update()
+    attrs = sanitize_attrs(attrs)
+    changeset = Automation.changeset(automation, attrs)
+
+    cond do
+      is_nil(Map.get(attrs, :user_id, automation.user_id)) ->
+        {:error, changeset}
+
+      is_nil(Map.get(attrs, :platform, automation.platform)) ->
+        {:error, changeset}
+
+      not Map.get(attrs, :is_active, automation.is_active) ->
+        automation
+        |> Automation.changeset(attrs)
+        |> Repo.update()
+
+      can_update_automation?(
+        automation.id,
+        Map.get(attrs, :user_id, automation.user_id),
+        Map.get(attrs, :platform, automation.platform)
+      ) ->
+        automation
+        |> Automation.changeset(attrs)
+        |> Repo.update()
+
+      true ->
+        {:error,
+         Ecto.Changeset.add_error(
+           changeset,
+           :platform,
+           "you can only have one active automation per platform",
+           validation: :max_automations_per_platform_per_user
+         )}
+    end
+  end
+
+  def can_update_automation?(id, user_id, platform) do
+    query =
+      from a in Automation,
+        where:
+          a.id != ^id and a.user_id == ^user_id and a.platform == ^platform and
+            a.is_active == true
+
+    Repo.aggregate(query, :count, :id) < @max_automations_per_platform_per_user
   end
 
   @doc """

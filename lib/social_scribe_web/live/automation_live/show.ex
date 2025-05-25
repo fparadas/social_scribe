@@ -20,10 +20,14 @@ defmodule SocialScribeWeb.AutomationLive.Show do
   def handle_event("toggle_automation", %{"id" => id}, socket) do
     automation = Automations.get_automation!(id)
 
-    {:ok, updated_automation} =
-      Automations.update_automation(automation, %{is_active: !automation.is_active})
+    case Automations.update_automation(automation, %{is_active: !automation.is_active}) do
+      {:ok, updated_automation} ->
+        {:noreply, assign(socket, :automation, updated_automation)}
 
-    {:noreply, assign(socket, :automation, updated_automation)}
+      {:error, _changeset} ->
+        {:noreply,
+         put_flash(socket, :error, "You can only have one active automation per platform")}
+    end
   end
 
   defp page_title(:show), do: "Show Automation"
