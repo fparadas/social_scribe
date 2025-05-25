@@ -34,12 +34,23 @@ defmodule SocialScribeWeb.MeetingLive.Show do
         |> assign(
           :follow_up_email_form,
           to_form(%{
-            follow_up_email: ""
+            "follow_up_email" => ""
           })
         )
 
       {:ok, socket}
     end
+  end
+
+  @impl true
+  def handle_params(%{"automation_result_id" => automation_result_id}, _uri, socket) do
+    automation_result = Automations.get_automation_result!(automation_result_id)
+    {:noreply, assign(socket, :automation_result, automation_result)}
+  end
+
+  @impl true
+  def handle_params(_params, _uri, socket) do
+    {:noreply, socket}
   end
 
   @impl true
