@@ -38,7 +38,7 @@
                 {meeting.title}
               </h3>
               <p class="text-sm text-slate-500 ">
-                Recorded: meeting.recorded_at
+                Recorded: {meeting.recorded_at}
               </p>
               <p class="text-xs text-slate-400 ">
                 Duration: {format_duration(meeting.duration_seconds)} | Attendees: {Enum.count(
