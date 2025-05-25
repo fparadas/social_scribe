@@ -5,7 +5,7 @@ defmodule SocialScribe.Automations.Automation do
   schema "automations" do
     field :name, :string
     field :description, :string
-    field :platform, :string
+    field :platform, Ecto.Enum, values: [:linkedin, :facebook]
     field :example, :string
     field :is_active, :boolean, default: true
 

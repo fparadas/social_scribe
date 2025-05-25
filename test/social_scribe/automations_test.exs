@@ -39,7 +39,7 @@ defmodule SocialScribe.AutomationsTest do
       valid_attrs = %{
         name: "some name",
         description: "some description",
-        platform: "some platform",
+        platform: :linkedin,
         example: "some example",
         is_active: true,
         user_id: user.id
@@ -48,7 +48,7 @@ defmodule SocialScribe.AutomationsTest do
       assert {:ok, %Automation{} = automation} = Automations.create_automation(valid_attrs)
       assert automation.name == "some name"
       assert automation.description == "some description"
-      assert automation.platform == "some platform"
+      assert automation.platform == :linkedin
       assert automation.example == "some example"
       assert automation.is_active == true
     end
@@ -63,7 +63,7 @@ defmodule SocialScribe.AutomationsTest do
       update_attrs = %{
         name: "some updated name",
         description: "some updated description",
-        platform: "some updated platform",
+        platform: :facebook,
         example: "some updated example",
         is_active: false
       }
@@ -73,7 +73,7 @@ defmodule SocialScribe.AutomationsTest do
 
       assert automation.name == "some updated name"
       assert automation.description == "some updated description"
-      assert automation.platform == "some updated platform"
+      assert automation.platform == :facebook
       assert automation.example == "some updated example"
       assert automation.is_active == false
     end

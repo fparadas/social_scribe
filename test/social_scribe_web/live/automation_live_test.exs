@@ -8,19 +8,19 @@ defmodule SocialScribeWeb.AutomationLiveTest do
   @create_attrs %{
     name: "some name <> #{System.unique_integer()}",
     description: "some description",
-    platform: "Linkedin",
+    platform: :linkedin,
     example: "some example"
   }
   @update_attrs %{
     name: "some updated name",
     description: "some updated description",
-    platform: "Facebook",
+    platform: :facebook,
     example: "some updated example"
   }
   @invalid_attrs %{
     name: nil,
     description: nil,
-    platform: "Linkedin",
+    platform: :linkedin,
     example: nil
   }
 

@@ -25,7 +25,7 @@ defmodule SocialScribeWeb.AutomationLive.FormComponent do
           field={@form[:platform]}
           type="select"
           label="Platform"
-          options={["Linkedin", "Facebook"]}
+          options={Ecto.Enum.values(Automations.Automation, :platform)}
         />
         <.input field={@form[:description]} type="textarea" label="Description" />
         <.input field={@form[:example]} type="textarea" label="Example" />
