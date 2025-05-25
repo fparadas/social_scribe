@@ -127,7 +127,9 @@
     module={SocialScribeWeb.MeetingLive.DraftPostFormComponent}
     id={"draft-post-#{@meeting.id}"}
     automation_result={@automation_result}
+    automation={@automation}
     meeting={@meeting}
+    current_user={@current_user}
     patch={~p"/dashboard/meetings/#{@meeting}"}
   />
 </.modal>

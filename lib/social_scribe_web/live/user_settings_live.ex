@@ -9,10 +9,13 @@ defmodule SocialScribeWeb.UserSettingsLive do
 
     google_accounts = Accounts.list_user_credentials(current_user, provider: "google")
 
+    linkedin_accounts = Accounts.list_user_credentials(current_user, provider: "linkedin")
+
     socket =
       socket
       |> assign(:page_title, "User Settings")
       |> assign(:google_accounts, google_accounts)
+      |> assign(:linkedin_accounts, linkedin_accounts)
 
     {:ok, socket}
   end

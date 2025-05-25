@@ -45,7 +45,14 @@ defmodule SocialScribeWeb.MeetingLive.Show do
   @impl true
   def handle_params(%{"automation_result_id" => automation_result_id}, _uri, socket) do
     automation_result = Automations.get_automation_result!(automation_result_id)
-    {:noreply, assign(socket, :automation_result, automation_result)}
+    automation = Automations.get_automation!(automation_result.automation_id)
+
+    socket =
+      socket
+      |> assign(:automation_result, automation_result)
+      |> assign(:automation, automation)
+
+    {:noreply, socket}
   end
 
   @impl true

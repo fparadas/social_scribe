@@ -21,4 +21,10 @@ defmodule SocialScribe.Accounts.UserCredential do
     |> cast(attrs, [:provider, :uid, :token, :refresh_token, :expires_at, :user_id, :email])
     |> validate_required([:provider, :uid, :token, :refresh_token, :expires_at, :user_id, :email])
   end
+
+  def linkedin_changeset(user_credential, attrs) do
+    user_credential
+    |> cast(attrs, [:provider, :uid, :token, :refresh_token, :expires_at, :user_id, :email])
+    |> validate_required([:provider, :uid, :token, :expires_at, :user_id, :email])
+  end
 end

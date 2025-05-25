@@ -144,6 +144,10 @@ defmodule SocialScribe.Accounts do
   """
   def get_user_credential!(id), do: Repo.get!(UserCredential, id)
 
+  def get_user_linkedin_credential(user) do
+    Repo.get_by(UserCredential, user_id: user.id, provider: "linkedin")
+  end
+
   @doc """
   Gets a user credential by user, provider, and uid.
 
@@ -256,6 +260,23 @@ defmodule SocialScribe.Accounts do
     end
   end
 
+  @doc """
+  Finds or creates a user credential for a user.
+  """
+  def find_or_create_user_credential(user, %Auth{provider: :linkedin} = auth) do
+    case get_user_credential(
+           user,
+           Atom.to_string(auth.provider),
+           "urn:li:person:#{auth.extra.raw_info.user["sub"]}"
+         ) do
+      nil ->
+        create_user_credential(format_credential_attrs(user, auth))
+
+      %UserCredential{} = credential ->
+        update_user_credential(credential, format_credential_attrs(user, auth))
+    end
+  end
+
   def find_or_create_user_credential(user, %Auth{} = auth) do
     case get_user_credential(user, Atom.to_string(auth.provider), auth.uid) do
       nil ->
@@ -273,6 +294,20 @@ defmodule SocialScribe.Accounts do
       select: u
     )
     |> Repo.one()
+  end
+
+  defp format_credential_attrs(user, %Auth{provider: :linkedin} = auth) do
+    %{
+      user_id: user.id,
+      provider: to_string(auth.provider),
+      uid: "urn:li:person:#{auth.extra.raw_info.user["sub"]}",
+      token: auth.credentials.token,
+      refresh_token: auth.credentials.token,
+      expires_at:
+        (auth.credentials.expires_at && DateTime.from_unix!(auth.credentials.expires_at)) ||
+          DateTime.add(DateTime.utc_now(), 3600, :second),
+      email: auth.info.email
+    }
   end
 
   defp format_credential_attrs(user, %Auth{credentials: %{refresh_token: nil}} = auth) do
