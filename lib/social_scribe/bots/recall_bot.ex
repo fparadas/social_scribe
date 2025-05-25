@@ -6,8 +6,9 @@ defmodule SocialScribe.Bots.RecallBot do
     field :status, :string
     field :recall_bot_id, :string
     field :meeting_url, :string
-    field :user_id, :id
-    field :calendar_event_id, :id
+
+    belongs_to :user, SocialScribe.Accounts.User
+    belongs_to :calendar_event, SocialScribe.Calendar.CalendarEvent
 
     timestamps(type: :utc_datetime)
   end

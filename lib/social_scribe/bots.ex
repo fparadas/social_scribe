@@ -113,8 +113,7 @@ defmodule SocialScribe.Bots do
            RecallApi.create_bot(
              calendar_event.hangout_link,
              DateTime.add(calendar_event.start_time, -2, :minute)
-           )
-           |> dbg() do
+           ) do
       create_recall_bot(%{
         user_id: user.id,
         calendar_event_id: calendar_event.id,
