@@ -11,13 +11,19 @@ defmodule SocialScribe.AutomationsTest do
   import SocialScribe.AutomationsFixtures
 
   describe "automations" do
-    @invalid_attrs %{name: nil, description: nil, platform: nil, example: nil, is_active: nil}
+    @invalid_attrs %{
+      name: nil,
+      description: nil,
+      platform: nil,
+      example: nil,
+      is_active: nil
+    }
 
     test "list_active_user_automations/1 returns the list of active automations for a user" do
       user = user_fixture()
-      automation_1 = automation_fixture(%{user_id: user.id, is_active: true})
-      automation_2 = automation_fixture(%{user_id: user.id, is_active: true})
       _automation_3 = automation_fixture(%{user_id: user.id, is_active: false})
+      automation_1 = automation_fixture(%{user_id: user.id, is_active: true, platform: :linkedin})
+      automation_2 = automation_fixture(%{user_id: user.id, is_active: true, platform: :facebook})
       _automation_4 = automation_fixture(%{is_active: true})
 
       assert Automations.list_active_user_automations(user.id) == [automation_1, automation_2]
@@ -31,6 +37,17 @@ defmodule SocialScribe.AutomationsTest do
     test "get_automation!/1 returns the automation with given id" do
       automation = automation_fixture()
       assert Automations.get_automation!(automation.id) == automation
+    end
+
+    test "can_create_automation?/2 returns true if the user has no active automations for the given platform" do
+      user = user_fixture()
+      assert Automations.can_create_automation?(user.id, :linkedin) == true
+    end
+
+    test "can_create_automation?/2 returns false if the user has an active automation for the given platform" do
+      user = user_fixture()
+      _automation = automation_fixture(%{user_id: user.id, platform: :linkedin, is_active: true})
+      assert Automations.can_create_automation?(user.id, :linkedin) == false
     end
 
     test "create_automation/1 with valid data creates a automation" do

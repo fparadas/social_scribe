@@ -83,7 +83,7 @@ defmodule SocialScribeWeb.AutomationLive.FormComponent do
          |> push_patch(to: socket.assigns.patch)}
 
       {:error, %Ecto.Changeset{} = changeset} ->
-        {:noreply, assign(socket, form: to_form(changeset))}
+        {:noreply, assign(socket, form: to_form(changeset, action: :validate))}
     end
   end
 

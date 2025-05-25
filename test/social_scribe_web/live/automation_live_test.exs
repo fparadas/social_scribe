@@ -8,7 +8,7 @@ defmodule SocialScribeWeb.AutomationLiveTest do
   @create_attrs %{
     name: "some name <> #{System.unique_integer()}",
     description: "some description",
-    platform: :linkedin,
+    platform: :facebook,
     example: "some example"
   }
   @update_attrs %{
@@ -65,6 +65,9 @@ defmodule SocialScribeWeb.AutomationLiveTest do
     end
 
     test "updates automation in listing", %{conn: conn, automation: automation} do
+      user = user_fixture()
+      conn = log_in_user(conn, user)
+
       {:ok, index_live, _html} = live(conn, ~p"/dashboard/automations")
 
       assert index_live |> element("#automations-#{automation.id} a", "Edit") |> render_click() =~
