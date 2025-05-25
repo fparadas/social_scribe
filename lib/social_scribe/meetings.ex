@@ -120,6 +120,33 @@ defmodule SocialScribe.Meetings do
     Meeting.changeset(meeting, attrs)
   end
 
+  @doc """
+  Lists all processed meetings for a user.
+  """
+  def list_user_meetings(user) do
+    from(m in Meeting,
+      join: ce in assoc(m, :calendar_event),
+      where: ce.user_id == ^user.id,
+      order_by: [desc: m.recorded_at],
+      preload: [:meeting_transcript, :meeting_participants]
+    )
+    |> Repo.all()
+  end
+
+  @doc """
+  Gets a meeting with its details preloaded.
+
+  ## Examples
+
+      iex> get_meeting_with_details(123)
+      %Meeting{}
+  """
+  def get_meeting_with_details(meeting_id) do
+    Meeting
+    |> Repo.get(meeting_id)
+    |> Repo.preload([:calendar_event, :recall_bot, :meeting_transcript, :meeting_participants])
+  end
+
   alias SocialScribe.Meetings.MeetingTranscript
 
   @doc """
@@ -389,24 +416,5 @@ defmodule SocialScribe.Meetings do
       name: participant_data.name,
       is_host: Map.get(participant_data, :is_host, false)
     }
-  end
-
-  @doc """
-  Lists all processed meetings for a user.
-  """
-  def list_user_meetings(user) do
-    from(m in Meeting,
-      join: ce in assoc(m, :calendar_event),
-      where: ce.user_id == ^user.id,
-      order_by: [desc: m.recorded_at],
-      preload: [:meeting_transcript, :meeting_participants]
-    )
-    |> Repo.all()
-  end
-
-  def get_meeting_with_details!(meeting_id) do
-    Meeting
-    |> Repo.get!(meeting_id)
-    |> Repo.preload([:calendar_event, :recall_bot, :meeting_transcript, :meeting_participants])
   end
 end

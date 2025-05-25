@@ -1,11 +1,13 @@
 defmodule SocialScribeWeb.MeetingLive.Show do
   use SocialScribeWeb, :live_view
 
+  import SocialScribeWeb.ClipboardButton
+
   alias SocialScribe.Meetings
 
   @impl true
   def mount(%{"id" => meeting_id}, _session, socket) do
-    meeting = Meetings.get_meeting_with_details!(meeting_id)
+    meeting = Meetings.get_meeting_with_details(meeting_id)
 
     if meeting.calendar_event.user_id != socket.assigns.current_user.id do
       socket =
@@ -20,20 +22,27 @@ defmodule SocialScribeWeb.MeetingLive.Show do
         |> assign(:page_title, "Meeting Details: #{meeting.title}")
         |> assign(:meeting, meeting)
         |> assign(
-          :ai_follow_up_email,
-          "AI-generated follow-up email will appear here once generated."
+          :follow_up_email_form,
+          to_form(%{
+            follow_up_email: ""
+          })
         )
         |> assign(:ai_social_posts_list, [
           %{platform: "LinkedIn", content: "LinkedIn post draft from automation will be here."},
           %{platform: "Facebook", content: "Facebook post draft from automation will be here."}
         ])
-        |> assign(
-          :ai_draft_social_post,
-          "A manually generated AI draft social media post will appear here."
-        )
 
       {:ok, socket}
     end
+  end
+
+  @impl true
+  def handle_event("validate-follow-up-email", params, socket) do
+    socket =
+      socket
+      |> assign(:follow_up_email_form, to_form(params))
+
+    {:noreply, socket}
   end
 
   defp format_duration(nil), do: "N/A"

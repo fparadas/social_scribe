@@ -18,6 +18,7 @@ defmodule SocialScribe.DataCase do
 
   using do
     quote do
+      use Oban.Testing, repo: SocialScribe.Repo
       alias SocialScribe.Repo
 
       import Ecto
