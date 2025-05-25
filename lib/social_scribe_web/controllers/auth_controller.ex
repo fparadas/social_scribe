@@ -40,12 +40,12 @@ defmodule SocialScribeWeb.AuthController do
     case Accounts.find_or_create_user_credential(user, auth) do
       {:ok, _credential} ->
         conn
-        |> put_flash(:info, "Linkedin account added successfully.")
+        |> put_flash(:info, "LinkedIn account added successfully.")
         |> redirect(to: ~p"/dashboard/settings")
 
       {:error, _reason} ->
         conn
-        |> put_flash(:error, "Could not add Linkedin account.")
+        |> put_flash(:error, "Could not add LinkedIn account.")
         |> redirect(to: ~p"/dashboard/settings")
     end
   end
