@@ -57,11 +57,12 @@ defmodule SocialScribeWeb.AuthController do
       when not is_nil(user) do
     case Accounts.find_or_create_user_credential(user, auth) do
       {:ok, credential} ->
-        if {:ok, facebook_pages} = FacebookApi.fetch_user_pages(credential.uid, credential.token) do
-          facebook_pages
-          |> Enum.each(fn page ->
-            Accounts.link_facebook_page(user, credential, page)
-          end)
+        case FacebookApi.fetch_user_pages(credential.uid, credential.token) do
+          {:ok, facebook_pages} ->
+            facebook_pages
+            |> Enum.each(fn page ->
+              Accounts.link_facebook_page(user, credential, page)
+            end)
         end
 
         conn
