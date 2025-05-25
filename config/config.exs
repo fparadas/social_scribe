@@ -83,13 +83,20 @@ config :ueberauth, Ueberauth,
        [
          default_scope: "email profile https://www.googleapis.com/auth/calendar.readonly",
          extra_params: [access_type: "offline", prompt: "consent"]
-       ]}
+       ]},
+    linkedin:
+      {Ueberauth.Strategy.LinkedIn, [default_scope: "openid profile email w_member_social"]}
   ]
 
 config :ueberauth, Ueberauth.Strategy.Google.OAuth,
   client_id: System.get_env("GOOGLE_CLIENT_ID"),
   client_secret: System.get_env("GOOGLE_CLIENT_SECRET"),
   redirect_uri: "http://localhost:4000/auth/google/callback"
+
+config :ueberauth, Ueberauth.Strategy.LinkedIn.OAuth,
+  client_id: System.get_env("LINKEDIN_CLIENT_ID"),
+  client_secret: System.get_env("LINKEDIN_CLIENT_SECRET"),
+  redirect_uri: "http://localhost:4000/auth/linkedin/callback"
 
 config :social_scribe, :recall_api_key, System.get_env("RECALL_API_KEY")
 config :social_scribe, :recall_region, System.get_env("RECALL_REGION")

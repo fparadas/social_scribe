@@ -16,7 +16,9 @@ defmodule SocialScribeWeb.AuthController do
   @doc """
   Handles the callback from the provider after the user has granted consent.
   """
-  def callback(%{assigns: %{ueberauth_auth: auth, current_user: user}} = conn, _params)
+  def callback(%{assigns: %{ueberauth_auth: auth, current_user: user}} = conn, %{
+        "provider" => "google"
+      })
       when not is_nil(user) do
     case Accounts.find_or_create_user_credential(user, auth) do
       {:ok, _credential} ->
@@ -27,6 +29,27 @@ defmodule SocialScribeWeb.AuthController do
       {:error, _reason} ->
         conn
         |> put_flash(:error, "Could not add Google account.")
+        |> redirect(to: ~p"/dashboard/settings")
+    end
+  end
+
+  def callback(%{assigns: %{ueberauth_auth: auth, current_user: user}} = conn, %{
+        "provider" => "linkedin"
+      })
+      when not is_nil(user) do
+    dbg(auth)
+
+    case Accounts.find_or_create_user_credential(user, auth) do
+      {:ok, _credential} ->
+        conn
+        |> put_flash(:info, "Linkedin account added successfully.")
+        |> redirect(to: ~p"/dashboard/settings")
+
+      {:error, reason} ->
+        dbg(reason)
+
+        conn
+        |> put_flash(:error, "Could not add Linkedin account.")
         |> redirect(to: ~p"/dashboard/settings")
     end
   end
@@ -42,5 +65,11 @@ defmodule SocialScribeWeb.AuthController do
         |> put_flash(:error, "There was an error signing you in.")
         |> redirect(to: ~p"/")
     end
+  end
+
+  def callback(conn, _params) do
+    conn
+    |> put_flash(:error, "There was an error signing you in. Please try again.")
+    |> redirect(to: ~p"/")
   end
 end

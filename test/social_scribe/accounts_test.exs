@@ -269,7 +269,7 @@ defmodule SocialScribe.AccountsTest do
     end
   end
 
-  describe "find_or_create_user_from_oauth/1" do
+  describe "find_or_create_user_credential/2" do
     @tag :google_auth
     test "when the user has previously logged in with Google, it finds the existing user" do
       auth = %Ueberauth.Auth{
@@ -349,6 +349,127 @@ defmodule SocialScribe.AccountsTest do
       assert Repo.aggregate(Accounts.User, :count, :id) == 1
       credential = Repo.get_by!(UserCredential, uid: auth.uid)
       assert credential.user_id == new_user.id
+    end
+
+    test "creates a new credential for LinkedIn when none exists" do
+      user = user_fixture()
+
+      auth = %Ueberauth.Auth{
+        provider: :linkedin,
+        uid: nil,
+        info: %Ueberauth.Auth.Info{
+          email: user.email
+        },
+        credentials: %Ueberauth.Auth.Credentials{
+          token: "test-token",
+          expires_at: DateTime.utc_now() |> DateTime.add(3600, :second) |> DateTime.to_unix()
+        },
+        extra: %{
+          raw_info: %{
+            user: %{
+              "sub" => "linkedin-uid-12345"
+            }
+          }
+        }
+      }
+
+      {:ok, credential} = Accounts.find_or_create_user_credential(user, auth)
+
+      assert credential.provider == "linkedin"
+      assert credential.uid == "urn:li:person:linkedin-uid-12345"
+      assert credential.token == "test-token"
+      assert credential.refresh_token == "test-token"
+      assert credential.user_id == user.id
+    end
+
+    test "updates existing credential for LinkedIn" do
+      user = user_fixture()
+
+      existing_credential =
+        user_credential_fixture(%{
+          user_id: user.id,
+          provider: "linkedin",
+          uid: "urn:li:person:linkedin-uid-12345"
+        })
+
+      auth = %Ueberauth.Auth{
+        provider: :linkedin,
+        uid: "linkedin-uid-12345",
+        info: %Ueberauth.Auth.Info{
+          email: user.email
+        },
+        credentials: %Ueberauth.Auth.Credentials{
+          token: "new-token",
+          expires_at: DateTime.utc_now() |> DateTime.add(3600, :second) |> DateTime.to_unix()
+        },
+        extra: %{
+          raw_info: %{
+            user: %{
+              "sub" => "linkedin-uid-12345"
+            }
+          }
+        }
+      }
+
+      {:ok, updated_credential} = Accounts.find_or_create_user_credential(user, auth)
+
+      assert updated_credential.id == existing_credential.id
+      assert updated_credential.token == "new-token"
+    end
+
+    test "creates a new credential for Google when none exists" do
+      user = user_fixture()
+
+      auth = %Ueberauth.Auth{
+        provider: :google,
+        uid: "google-uid-12345",
+        info: %Ueberauth.Auth.Info{
+          email: user.email
+        },
+        credentials: %Ueberauth.Auth.Credentials{
+          token: "test-token",
+          refresh_token: "test-refresh",
+          expires_at: DateTime.utc_now() |> DateTime.add(3600, :second) |> DateTime.to_unix()
+        }
+      }
+
+      {:ok, credential} = Accounts.find_or_create_user_credential(user, auth)
+
+      assert credential.provider == "google"
+      assert credential.uid == "google-uid-12345"
+      assert credential.token == "test-token"
+      assert credential.refresh_token == "test-refresh"
+      assert credential.user_id == user.id
+    end
+
+    test "updates existing credential for Google" do
+      user = user_fixture()
+
+      existing_credential =
+        user_credential_fixture(%{
+          user_id: user.id,
+          provider: "google",
+          uid: "google-uid-12345"
+        })
+
+      auth = %Ueberauth.Auth{
+        provider: :google,
+        uid: "google-uid-12345",
+        info: %Ueberauth.Auth.Info{
+          email: user.email
+        },
+        credentials: %Ueberauth.Auth.Credentials{
+          token: "new-token",
+          refresh_token: "new-refresh",
+          expires_at: DateTime.utc_now() |> DateTime.add(3600, :second) |> DateTime.to_unix()
+        }
+      }
+
+      {:ok, updated_credential} = Accounts.find_or_create_user_credential(user, auth)
+
+      assert updated_credential.id == existing_credential.id
+      assert updated_credential.token == "new-token"
+      assert updated_credential.refresh_token == "new-refresh"
     end
   end
 end
