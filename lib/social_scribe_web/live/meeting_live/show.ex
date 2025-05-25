@@ -5,7 +5,7 @@ defmodule SocialScribeWeb.MeetingLive.Show do
 
   @impl true
   def mount(%{"id" => meeting_id}, _session, socket) do
-    meeting = Meetings.get_meeting_with_details!(meeting_id)
+    meeting = Meetings.get_meeting_with_details(meeting_id)
 
     if meeting.calendar_event.user_id != socket.assigns.current_user.id do
       socket =

@@ -13,6 +13,7 @@ config :social_scribe, Oban,
   repo: SocialScribe.Repo,
   queues: [
     default: 10,
+    ai_content: 10,
     polling: 5
   ],
   plugins: [

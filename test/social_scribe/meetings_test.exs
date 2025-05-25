@@ -7,6 +7,7 @@ defmodule SocialScribe.MeetingsTest do
   import SocialScribe.CalendarFixtures
   import SocialScribe.BotsFixtures
   import SocialScribe.MeetingsFixtures
+  import SocialScribe.AccountsFixtures
 
   describe "meetings" do
     @invalid_attrs %{title: nil, recorded_at: nil, duration_seconds: nil}
@@ -83,6 +84,33 @@ defmodule SocialScribe.MeetingsTest do
     test "change_meeting/1 returns a meeting changeset" do
       meeting = meeting_fixture()
       assert %Ecto.Changeset{} = Meetings.change_meeting(meeting)
+    end
+
+    test "list_user_meetings/1 returns all meetings for a user" do
+      user = user_fixture()
+      calendar_event = calendar_event_fixture(%{user_id: user.id})
+      recall_bot = recall_bot_fixture(%{calendar_event_id: calendar_event.id, user_id: user.id})
+
+      meeting =
+        meeting_fixture(%{calendar_event_id: calendar_event.id, recall_bot_id: recall_bot.id})
+
+      assert Meetings.list_user_meetings(user) ==
+               Repo.preload([meeting], [
+                 :meeting_transcript,
+                 :meeting_participants
+               ])
+    end
+
+    test "get_meeting_with_details/1 returns the meeting with its details preloaded" do
+      meeting = meeting_fixture()
+
+      assert Meetings.get_meeting_with_details(meeting.id) ==
+               Repo.preload(meeting, [
+                 :calendar_event,
+                 :recall_bot,
+                 :meeting_transcript,
+                 :meeting_participants
+               ])
     end
   end
 
