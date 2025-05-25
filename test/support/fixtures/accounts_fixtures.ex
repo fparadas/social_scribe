@@ -50,4 +50,35 @@ defmodule SocialScribe.AccountsFixtures do
 
     user_credential
   end
+
+  @doc """
+  Generate a unique facebook_page_credential facebook_page_id.
+  """
+  def unique_facebook_page_credential_facebook_page_id,
+    do: "some facebook_page_id#{System.unique_integer([:positive])}"
+
+  @doc """
+  Generate a facebook_page_credential.
+  """
+  def facebook_page_credential_fixture(attrs \\ %{}) do
+    user_id = attrs[:user_id] || user_fixture().id
+
+    user_credential_id =
+      attrs[:user_credential_id] || user_credential_fixture(%{user_id: user_id}).id
+
+    {:ok, facebook_page_credential} =
+      attrs
+      |> Enum.into(%{
+        category: "some category",
+        facebook_page_id: unique_facebook_page_credential_facebook_page_id(),
+        page_access_token: "some page_access_token",
+        page_name: "some page_name",
+        selected: false,
+        user_id: user_id,
+        user_credential_id: user_credential_id
+      })
+      |> SocialScribe.Accounts.create_facebook_page_credential()
+
+    facebook_page_credential
+  end
 end

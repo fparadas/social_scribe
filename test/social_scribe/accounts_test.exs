@@ -472,4 +472,121 @@ defmodule SocialScribe.AccountsTest do
       assert updated_credential.refresh_token == "new-refresh"
     end
   end
+
+  describe "facebook_page_credentials" do
+    alias SocialScribe.Accounts.FacebookPageCredential
+
+    import SocialScribe.AccountsFixtures
+
+    @invalid_attrs %{category: nil, facebook_page_id: nil, page_name: nil, page_access_token: nil}
+
+    test "list_facebook_page_credentials/0 returns all facebook_page_credentials" do
+      facebook_page_credential = facebook_page_credential_fixture()
+      assert Accounts.list_facebook_page_credentials() == [facebook_page_credential]
+    end
+
+    test "get_facebook_page_credential!/1 returns the facebook_page_credential with given id" do
+      facebook_page_credential = facebook_page_credential_fixture()
+
+      assert Accounts.get_facebook_page_credential!(facebook_page_credential.id) ==
+               facebook_page_credential
+    end
+
+    test "create_facebook_page_credential/1 with valid data creates a facebook_page_credential" do
+      user = user_fixture()
+      user_credential = user_credential_fixture(%{user_id: user.id})
+
+      valid_attrs = %{
+        category: "some category",
+        facebook_page_id: "some facebook_page_id",
+        page_name: "some page_name",
+        page_access_token: "some page_access_token",
+        user_id: user.id,
+        user_credential_id: user_credential.id
+      }
+
+      assert {:ok, %FacebookPageCredential{} = facebook_page_credential} =
+               Accounts.create_facebook_page_credential(valid_attrs)
+
+      assert facebook_page_credential.category == "some category"
+      assert facebook_page_credential.facebook_page_id == "some facebook_page_id"
+      assert facebook_page_credential.page_name == "some page_name"
+      assert facebook_page_credential.page_access_token == "some page_access_token"
+    end
+
+    test "create_facebook_page_credential/1 with invalid data returns error changeset" do
+      assert {:error, %Ecto.Changeset{}} =
+               Accounts.create_facebook_page_credential(@invalid_attrs)
+    end
+
+    test "update_facebook_page_credential/2 with valid data updates the facebook_page_credential" do
+      facebook_page_credential = facebook_page_credential_fixture()
+
+      update_attrs = %{
+        category: "some updated category",
+        facebook_page_id: "some updated facebook_page_id",
+        page_name: "some updated page_name",
+        page_access_token: "some updated page_access_token"
+      }
+
+      assert {:ok, %FacebookPageCredential{} = facebook_page_credential} =
+               Accounts.update_facebook_page_credential(facebook_page_credential, update_attrs)
+
+      assert facebook_page_credential.category == "some updated category"
+      assert facebook_page_credential.facebook_page_id == "some updated facebook_page_id"
+      assert facebook_page_credential.page_name == "some updated page_name"
+      assert facebook_page_credential.page_access_token == "some updated page_access_token"
+    end
+
+    test "update_facebook_page_credential/2 with invalid data returns error changeset" do
+      facebook_page_credential = facebook_page_credential_fixture()
+
+      assert {:error, %Ecto.Changeset{}} =
+               Accounts.update_facebook_page_credential(facebook_page_credential, @invalid_attrs)
+
+      assert facebook_page_credential ==
+               Accounts.get_facebook_page_credential!(facebook_page_credential.id)
+    end
+
+    test "delete_facebook_page_credential/1 deletes the facebook_page_credential" do
+      facebook_page_credential = facebook_page_credential_fixture()
+
+      assert {:ok, %FacebookPageCredential{}} =
+               Accounts.delete_facebook_page_credential(facebook_page_credential)
+
+      assert_raise Ecto.NoResultsError, fn ->
+        Accounts.get_facebook_page_credential!(facebook_page_credential.id)
+      end
+    end
+
+    test "change_facebook_page_credential/1 returns a facebook_page_credential changeset" do
+      facebook_page_credential = facebook_page_credential_fixture()
+
+      assert %Ecto.Changeset{} =
+               Accounts.change_facebook_page_credential(facebook_page_credential)
+    end
+
+    test "user cant have 2 selecte facebook page credentials" do
+      user = user_fixture()
+      user_credential = user_credential_fixture(%{user_id: user.id})
+
+      _facebook_page_credential =
+        facebook_page_credential_fixture(%{
+          user_id: user.id,
+          user_credential_id: user_credential.id,
+          selected: true
+        })
+
+      assert {:error, %Ecto.Changeset{}} =
+               Accounts.create_facebook_page_credential(%{
+                 category: "some category",
+                 facebook_page_id: "some facebook_page_id",
+                 page_name: "some page_name",
+                 page_access_token: "some page_access_token",
+                 user_credential_id: user_credential.id,
+                 selected: true,
+                 user_id: user.id
+               })
+    end
+  end
 end

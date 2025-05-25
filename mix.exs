@@ -40,6 +40,7 @@ defmodule SocialScribe.MixProject do
       {:tesla, "~> 1.14"},
       {:ueberauth_google, "~> 0.12.1"},
       {:ueberauth_linkedin, "~> 0.10.8", hex: :ueberauth_linkedin_modern},
+      {:ueberauth_facebook, "~> 0.10"},
       {:ueberauth, "~> 0.10.8"},
       {:bcrypt_elixir, "~> 3.0"},
       {:phoenix, "~> 1.7.21"},
