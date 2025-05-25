@@ -1,11 +1,37 @@
 defmodule SocialScribe.Facebook do
   @behaviour SocialScribe.FacebookApi
 
+  require Logger
+
   @base_url "https://graph.facebook.com/v22.0"
 
   @impl SocialScribe.FacebookApi
-  def post_message_to_page(user_id, user_access_token, page_id, message) do
-    {:ok, "Post message to page"}
+  def post_message_to_page(page_id, page_access_token, message) do
+    body_params = %{
+      message: message,
+      access_token: page_access_token
+    }
+
+    case Tesla.post(client(), "/#{page_id}/feed", body_params) do
+      {:ok, %Tesla.Env{status: 200, body: response_body}} ->
+        Logger.info(
+          "Successfully posted to Facebook Page #{page_id}. Response ID: #{response_body["id"]}"
+        )
+
+        {:ok, response_body}
+
+      {:ok, %Tesla.Env{status: status, body: error_body}} ->
+        Logger.error(
+          "Facebook Page Post API Error (Page ID: #{page_id}, Status: #{status}): #{inspect(error_body)}"
+        )
+
+        message = get_in(error_body, ["error", "message"]) || "Unknown API error"
+        {:error, {:api_error_posting, status, message, error_body}}
+
+      {:error, reason} ->
+        Logger.error("Facebook Page Post HTTP Error (Page ID: #{page_id}): #{inspect(reason)}")
+        {:error, {:http_error_posting, reason}}
+    end
   end
 
   @impl SocialScribe.FacebookApi

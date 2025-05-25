@@ -55,7 +55,7 @@ defmodule SocialScribeWeb.AuthController do
         "provider" => "facebook"
       })
       when not is_nil(user) do
-    case Accounts.find_or_create_user_credential(user, auth) |> dbg() do
+    case Accounts.find_or_create_user_credential(user, auth) do
       {:ok, credential} ->
         if {:ok, facebook_pages} = FacebookApi.fetch_user_pages(credential.uid, credential.token) do
           facebook_pages
