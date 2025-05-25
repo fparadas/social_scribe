@@ -11,12 +11,16 @@ defmodule SocialScribe.Poster do
   end
 
   defp post_on_linkedin(generated_content, current_user) do
-    user_credential = Accounts.get_user_linkedin_credential(current_user)
+    case Accounts.get_user_linkedin_credential(current_user) do
+      nil ->
+        {:error, "LinkedIn credential not found"}
 
-    LinkedInApi.post_text_share(
-      user_credential.token,
-      user_credential.uid,
-      generated_content
-    )
+      user_credential ->
+        LinkedInApi.post_text_share(
+          user_credential.token,
+          user_credential.uid,
+          generated_content
+        )
+    end
   end
 end
