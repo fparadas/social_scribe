@@ -6,7 +6,7 @@ defmodule SocialScribe.AIContentGenerator do
   alias SocialScribe.Meetings
   alias SocialScribe.Automations
 
-  @gemini_model "gemini-2.0-flash-light"
+  @gemini_model "gemini-2.0-flash-lite"
   @gemini_api_base_url "https://generativelanguage.googleapis.com/v1beta/models"
 
   @impl SocialScribe.AIContentGeneratorApi
@@ -61,7 +61,17 @@ defmodule SocialScribe.AIContentGenerator do
       {:ok, %Tesla.Env{status: 200, body: body}} ->
         # Safely extract the text content
         # The response structure is typically: body.candidates[0].content.parts[0].text
-        case get_in(body, ["candidates", 0, "content", "parts", 0, "text"]) do
+
+        text_path = [
+          "candidates",
+          Access.at(0),
+          "content",
+          "parts",
+          Access.at(0),
+          "text"
+        ]
+
+        case get_in(body, text_path) do
           nil -> {:error, {:parsing_error, "No text content found in Gemini response", body}}
           text_content -> {:ok, text_content}
         end
@@ -77,9 +87,7 @@ defmodule SocialScribe.AIContentGenerator do
   defp client do
     Tesla.client([
       {Tesla.Middleware.BaseUrl, @gemini_api_base_url},
-      Tesla.Middleware.JSON,
-      {Tesla.Middleware.Headers,
-       [{"Authorization", "Bearer #{Application.fetch_env!(:social_scribe, :gemini_api_key)}"}]}
+      Tesla.Middleware.JSON
     ])
   end
 end

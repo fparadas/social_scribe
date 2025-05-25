@@ -123,7 +123,7 @@ defmodule SocialScribe.AutomationsTest do
       automation_result = automation_result_fixture()
 
       assert Automations.list_automation_results_for_meeting(automation_result.meeting_id) == [
-               automation_result
+               Repo.preload(automation_result, [:automation])
              ]
     end
 

@@ -143,6 +143,7 @@ defmodule SocialScribe.Automations do
   def list_automation_results_for_meeting(meeting_id) do
     from(ar in AutomationResult, where: ar.meeting_id == ^meeting_id)
     |> Repo.all()
+    |> Repo.preload([:automation])
   end
 
   @doc """

@@ -4,10 +4,18 @@ defmodule SocialScribeWeb.MeetingLive.Show do
   import SocialScribeWeb.ClipboardButton
 
   alias SocialScribe.Meetings
+  alias SocialScribe.Automations
 
   @impl true
   def mount(%{"id" => meeting_id}, _session, socket) do
     meeting = Meetings.get_meeting_with_details(meeting_id)
+
+    user_has_automations =
+      Automations.list_active_user_automations(socket.assigns.current_user.id)
+      |> length()
+      |> Kernel.>(0)
+
+    automation_results = Automations.list_automation_results_for_meeting(meeting_id)
 
     if meeting.calendar_event.user_id != socket.assigns.current_user.id do
       socket =
@@ -21,16 +29,14 @@ defmodule SocialScribeWeb.MeetingLive.Show do
         socket
         |> assign(:page_title, "Meeting Details: #{meeting.title}")
         |> assign(:meeting, meeting)
+        |> assign(:automation_results, automation_results)
+        |> assign(:user_has_automations, user_has_automations)
         |> assign(
           :follow_up_email_form,
           to_form(%{
             follow_up_email: ""
           })
         )
-        |> assign(:ai_social_posts_list, [
-          %{platform: "LinkedIn", content: "LinkedIn post draft from automation will be here."},
-          %{platform: "Facebook", content: "Facebook post draft from automation will be here."}
-        ])
 
       {:ok, socket}
     end
