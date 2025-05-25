@@ -1,6 +1,7 @@
 defmodule SocialScribeWeb.Router do
   use SocialScribeWeb, :router
 
+  import Oban.Web.Router
   import SocialScribeWeb.UserAuth
 
   pipeline :browser do
@@ -41,6 +42,12 @@ defmodule SocialScribeWeb.Router do
       live_dashboard "/dashboard", metrics: SocialScribeWeb.Telemetry
       forward "/mailbox", Plug.Swoosh.MailboxPreview
     end
+
+    scope "/" do
+      pipe_through :browser
+
+      oban_dashboard("/oban")
+    end
   end
 
   ## Authentication routes
@@ -68,7 +75,11 @@ defmodule SocialScribeWeb.Router do
       ],
       layout: {SocialScribeWeb.Layouts, :dashboard} do
       live "/", HomeLive
+
       live "/settings", UserSettingsLive
+
+      live "/meetings", MeetingLive.Index, :index
+      live "/meetings/:id", MeetingLive.Show, :show
     end
   end
 

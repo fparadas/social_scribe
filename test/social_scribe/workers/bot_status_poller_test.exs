@@ -12,7 +12,6 @@ defmodule SocialScribe.Workers.BotStatusPollerTest do
   alias SocialScribe.RecallApiMock
   alias SocialScribe.Bots
   alias SocialScribe.Meetings
-  alias SocialScribe.Bots.RecallBot
 
   @mock_bot_api_info_pending %{
     id: "bot-pending-123",
