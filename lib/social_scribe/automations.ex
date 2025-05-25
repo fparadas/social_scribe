@@ -119,9 +119,33 @@ defmodule SocialScribe.Automations do
 
   """
   def update_automation(%Automation{} = automation, attrs) do
-    automation
-    |> Automation.changeset(attrs)
-    |> Repo.update()
+    attrs = sanitize_attrs(attrs)
+    changeset = Automation.changeset(automation, attrs)
+
+    cond do
+      is_nil(Map.get(attrs, :user_id, automation.user_id)) ->
+        {:error, changeset}
+
+      is_nil(Map.get(attrs, :platform, automation.platform)) ->
+        {:error, changeset}
+
+      can_create_automation?(
+        Map.get(attrs, :user_id, automation.user_id),
+        Map.get(attrs, :platform, automation.platform)
+      ) ->
+        automation
+        |> Automation.changeset(attrs)
+        |> Repo.update()
+
+      true ->
+        {:error,
+         Ecto.Changeset.add_error(
+           changeset,
+           :platform,
+           "you can only have one active automation per platform",
+           validation: :max_automations_per_platform_per_user
+         )}
+    end
   end
 
   @doc """

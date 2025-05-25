@@ -95,6 +95,17 @@ defmodule SocialScribe.AutomationsTest do
       assert automation.is_active == false
     end
 
+    test "update_automation/2 respects limit of one active automation per platform per user" do
+      user = user_fixture()
+      automation_1 = automation_fixture(%{user_id: user.id, platform: :linkedin, is_active: true})
+
+      _automation_2 =
+        automation_fixture(%{user_id: user.id, platform: :facebook, is_active: true})
+
+      assert {:error, %Ecto.Changeset{}} =
+               Automations.update_automation(automation_1, %{platform: :facebook})
+    end
+
     test "update_automation/2 with invalid data returns error changeset" do
       automation = automation_fixture()
 
