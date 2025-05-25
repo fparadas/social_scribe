@@ -31,12 +31,12 @@
         AI Draft: Follow-Up Email
       </h2>
       <div class="prose prose-sm max-w-none space-y-4">
-        <p :if={@meeting.follow_up_email}>
+        <p :if={!@meeting.follow_up_email}>
           AI-generated follow-up email will appear here once generated.
         </p>
 
         <.simple_form
-          :if={!@meeting.follow_up_email}
+          :if={@meeting.follow_up_email}
           for={@follow_up_email_form}
           phx-change="validate-follow-up-email"
         >
