@@ -566,7 +566,7 @@ defmodule SocialScribe.AccountsTest do
                Accounts.change_facebook_page_credential(facebook_page_credential)
     end
 
-    test "user cant have 2 selecte facebook page credentials" do
+    test "user cant have 2 selected facebook page credentials" do
       user = user_fixture()
       user_credential = user_credential_fixture(%{user_id: user.id})
 

@@ -63,6 +63,9 @@ defmodule SocialScribeWeb.AuthController do
             |> Enum.each(fn page ->
               Accounts.link_facebook_page(user, credential, page)
             end)
+
+          _ ->
+            :ok
         end
 
         conn
