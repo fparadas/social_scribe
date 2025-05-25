@@ -417,4 +417,77 @@ defmodule SocialScribe.Meetings do
       is_host: Map.get(participant_data, :is_host, false)
     }
   end
+
+  @doc """
+  Generates a prompt for a meeting.
+  """
+  def generate_prompt_for_meeting(%Meeting{} = meeting) do
+    case participants_to_string(meeting.meeting_participants) do
+      {:error, :no_participants} ->
+        {:error, :no_participants}
+
+      {:ok, participants_string} ->
+        case transcript_to_string(meeting.meeting_transcript) do
+          {:error, :no_transcript} ->
+            {:error, :no_transcript}
+
+          {:ok, transcript_string} ->
+            {:ok,
+             generate_prompt(
+               meeting.title,
+               meeting.recorded_at,
+               meeting.duration_seconds,
+               participants_string,
+               transcript_string
+             )}
+        end
+    end
+  end
+
+  defp generate_prompt(title, date, duration, participants, transcript) do
+    """
+    ## Meeting Info:
+    title: #{title}
+    date: #{date}
+    duration: #{duration} seconds
+
+    ### Participants:
+    #{participants}
+
+    ### Transcript:
+    #{transcript}
+    """
+  end
+
+  defp participants_to_string(participants) do
+    if Enum.empty?(participants) do
+      {:error, :no_participants}
+    else
+      participants_string =
+        participants
+        |> Enum.map(fn participant ->
+          "#{participant.name} (#{if participant.is_host, do: "Host", else: "Participant"})"
+        end)
+        |> Enum.join("\n")
+
+      {:ok, participants_string}
+    end
+  end
+
+  defp transcript_to_string(%MeetingTranscript{content: %{"data" => transcript_data}})
+       when not is_nil(transcript_data) do
+    {:ok, format_transcript_for_prompt(transcript_data)}
+  end
+
+  defp transcript_to_string(_), do: {:error, :no_transcript}
+
+  defp format_transcript_for_prompt(transcript_segments) when is_list(transcript_segments) do
+    Enum.map_join(transcript_segments, "\n", fn segment ->
+      speaker = Map.get(segment, "speaker", "Unknown Speaker")
+      text = Enum.map_join(Map.get(segment, "words", []), " ", &Map.get(&1, "text", ""))
+      "#{speaker}: #{text}"
+    end)
+  end
+
+  defp format_transcript_for_prompt(_), do: ""
 end

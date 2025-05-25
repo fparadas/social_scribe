@@ -80,6 +80,14 @@ defmodule SocialScribeWeb.Router do
 
       live "/meetings", MeetingLive.Index, :index
       live "/meetings/:id", MeetingLive.Show, :show
+      live "/meetings/:id/draft_post/:automation_result_id", MeetingLive.Show, :draft_post
+
+      live "/automations", AutomationLive.Index, :index
+      live "/automations/new", AutomationLive.Index, :new
+      live "/automations/:id/edit", AutomationLive.Index, :edit
+
+      live "/automations/:id", AutomationLive.Show, :show
+      live "/automations/:id/show/edit", AutomationLive.Show, :edit
     end
   end
 

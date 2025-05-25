@@ -3,21 +3,46 @@ defmodule SocialScribe.AIContentGenerator do
 
   @behaviour SocialScribe.AIContentGeneratorApi
 
-  @gemini_model "gemini-2.0-flash-light"
+  alias SocialScribe.Meetings
+  alias SocialScribe.Automations
+
+  @gemini_model "gemini-2.0-flash-lite"
   @gemini_api_base_url "https://generativelanguage.googleapis.com/v1beta/models"
 
   @impl SocialScribe.AIContentGeneratorApi
-  def generate_follow_up_email(transcript_content) do
-    prompt = """
-    Based on the following meeting transcript, please draft a concise and professional follow-up email.
-    The email should summarize the key discussion points and clearly list any action items assigned, including who is responsible if mentioned.
-    Keep the tone friendly and action-oriented.
+  def generate_follow_up_email(meeting) do
+    case Meetings.generate_prompt_for_meeting(meeting) do
+      {:error, reason} ->
+        {:error, reason}
 
-    Transcript:
-    #{format_transcript_for_prompt(transcript_content)}
-    """
+      {:ok, meeting_prompt} ->
+        prompt = """
+        Based on the following meeting transcript, please draft a concise and professional follow-up email.
+        The email should summarize the key discussion points and clearly list any action items assigned, including who is responsible if mentioned.
+        Keep the tone friendly and action-oriented.
 
-    call_gemini(prompt)
+        #{meeting_prompt}
+        """
+
+        call_gemini(prompt)
+    end
+  end
+
+  @impl SocialScribe.AIContentGeneratorApi
+  def generate_automation(automation, meeting) do
+    case Meetings.generate_prompt_for_meeting(meeting) do
+      {:error, reason} ->
+        {:error, reason}
+
+      {:ok, meeting_prompt} ->
+        prompt = """
+        #{Automations.generate_prompt_for_automation(automation)}
+
+        #{meeting_prompt}
+        """
+
+        call_gemini(prompt)
+    end
   end
 
   defp call_gemini(prompt_text) do
@@ -36,7 +61,17 @@ defmodule SocialScribe.AIContentGenerator do
       {:ok, %Tesla.Env{status: 200, body: body}} ->
         # Safely extract the text content
         # The response structure is typically: body.candidates[0].content.parts[0].text
-        case get_in(body, ["candidates", 0, "content", "parts", 0, "text"]) do
+
+        text_path = [
+          "candidates",
+          Access.at(0),
+          "content",
+          "parts",
+          Access.at(0),
+          "text"
+        ]
+
+        case get_in(body, text_path) do
           nil -> {:error, {:parsing_error, "No text content found in Gemini response", body}}
           text_content -> {:ok, text_content}
         end
@@ -52,20 +87,7 @@ defmodule SocialScribe.AIContentGenerator do
   defp client do
     Tesla.client([
       {Tesla.Middleware.BaseUrl, @gemini_api_base_url},
-      Tesla.Middleware.JSON,
-      {Tesla.Middleware.Headers,
-       [{"Authorization", "Bearer #{Application.fetch_env!(:social_scribe, :gemini_api_key)}"}]}
+      Tesla.Middleware.JSON
     ])
   end
-
-  defp format_transcript_for_prompt(transcript_segments) when is_list(transcript_segments) do
-    Enum.map_join(transcript_segments, "\n", fn segment ->
-      speaker = Map.get(segment, "speaker", "Unknown Speaker")
-      text = Enum.map_join(Map.get(segment, "words", []), " ", &Map.get(&1, "text", ""))
-      "#{speaker}: #{text}"
-    end)
-  end
-
-  # Handle nil or unexpected format
-  defp format_transcript_for_prompt(_), do: ""
 end

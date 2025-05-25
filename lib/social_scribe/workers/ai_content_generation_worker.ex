@@ -4,6 +4,8 @@ defmodule SocialScribe.Workers.AIContentGenerationWorker do
 
   alias SocialScribe.Meetings
   alias SocialScribe.AIContentGeneratorApi
+  alias SocialScribe.Automations
+
   require Logger
 
   @impl Oban.Worker
@@ -16,29 +18,32 @@ defmodule SocialScribe.Workers.AIContentGenerationWorker do
         {:error, :meeting_not_found}
 
       meeting ->
-        process_meeting(meeting)
+        case process_meeting(meeting) do
+          :ok ->
+            if meeting.calendar_event && meeting.calendar_event.user_id do
+              process_user_automations(meeting, meeting.calendar_event.user_id)
+              :ok
+            end
+
+          {:error, reason} ->
+            {:error, reason}
+        end
     end
   end
 
-  defp process_meeting(
-         %Meeting{
-           id: meeting_id,
-           meeting_transcript: %{content: %{"data" => transcript_content}}
-         } = meeting
-       )
-       when not is_nil(transcript_content) do
-    case AIContentGeneratorApi.generate_follow_up_email(transcript_content) do
+  defp process_meeting(%Meeting{} = meeting) do
+    case AIContentGeneratorApi.generate_follow_up_email(meeting) do
       {:ok, email_draft} ->
-        Logger.info("Generated follow-up email for meeting #{meeting_id}")
+        Logger.info("Generated follow-up email for meeting #{meeting.id}")
 
         case Meetings.update_meeting(meeting, %{follow_up_email: email_draft}) do
           {:ok, _updated_meeting} ->
-            Logger.info("Successfully saved AI content for meeting #{meeting_id}")
+            Logger.info("Successfully saved AI content for meeting #{meeting.id}")
             :ok
 
           {:error, changeset} ->
             Logger.error(
-              "Failed to save AI content for meeting #{meeting_id}: #{inspect(changeset.errors)}"
+              "Failed to save AI content for meeting #{meeting.id}: #{inspect(changeset.errors)}"
             )
 
             {:error, :db_update_failed}
@@ -46,18 +51,51 @@ defmodule SocialScribe.Workers.AIContentGenerationWorker do
 
       {:error, reason} ->
         Logger.error(
-          "Failed to generate follow-up email for meeting #{meeting_id}: #{inspect(reason)}"
+          "Failed to generate follow-up email for meeting #{meeting.id}: #{inspect(reason)}"
         )
 
         {:error, reason}
     end
   end
 
-  defp process_meeting(%Meeting{} = meeting) do
-    Logger.warning(
-      "AIContentGenerationWorker: Transcript not available for meeting_id #{meeting.id}. Skipping."
-    )
+  defp process_user_automations(meeting, user_id) do
+    user_automations = Automations.list_active_user_automations(user_id)
 
-    {:error, :no_transcript}
+    if Enum.empty?(user_automations) do
+      Logger.info("No active automations found for user #{user_id} for meeting #{meeting.id}")
+      :ok
+    else
+      Logger.info(
+        "Processing #{Enum.count(user_automations)} automations for meeting #{meeting.id}"
+      )
+
+      for automation <- user_automations do
+        case AIContentGeneratorApi.generate_automation(automation, meeting) do
+          {:ok, generated_text} ->
+            Automations.create_automation_result(%{
+              automation_id: automation.id,
+              meeting_id: meeting.id,
+              generated_content: generated_text,
+              status: "draft"
+            })
+
+            Logger.info(
+              "Successfully generated content for automation '#{automation.name}', meeting #{meeting.id}"
+            )
+
+          {:error, reason} ->
+            Automations.create_automation_result(%{
+              automation_id: automation.id,
+              meeting_id: meeting.id,
+              status: "generation_failed",
+              error_message: "Gemini API error: #{inspect(reason)}"
+            })
+
+            Logger.error(
+              "Failed to generate content for automation '#{automation.name}', meeting #{meeting.id}: #{inspect(reason)}"
+            )
+        end
+      end
+    end
   end
 end
