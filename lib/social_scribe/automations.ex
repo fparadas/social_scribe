@@ -129,7 +129,13 @@ defmodule SocialScribe.Automations do
       is_nil(Map.get(attrs, :platform, automation.platform)) ->
         {:error, changeset}
 
-      can_create_automation?(
+      not Map.get(attrs, :is_active, automation.is_active) ->
+        automation
+        |> Automation.changeset(attrs)
+        |> Repo.update()
+
+      can_update_automation?(
+        automation.id,
         Map.get(attrs, :user_id, automation.user_id),
         Map.get(attrs, :platform, automation.platform)
       ) ->
@@ -146,6 +152,16 @@ defmodule SocialScribe.Automations do
            validation: :max_automations_per_platform_per_user
          )}
     end
+  end
+
+  def can_update_automation?(id, user_id, platform) do
+    query =
+      from a in Automation,
+        where:
+          a.id != ^id and a.user_id == ^user_id and a.platform == ^platform and
+            a.is_active == true
+
+    Repo.aggregate(query, :count, :id) < @max_automations_per_platform_per_user
   end
 
   @doc """

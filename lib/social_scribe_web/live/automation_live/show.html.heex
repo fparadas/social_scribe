@@ -42,6 +42,7 @@
           <span class="text-sm font-medium text-slate-700">Active?</span>
           <label class="relative inline-flex items-center cursor-pointer">
             <input
+              id={"automation-#{@automation.id}-checkbox"}
               type="checkbox"
               class="sr-only peer"
               checked={@automation.is_active}

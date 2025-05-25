@@ -26,7 +26,7 @@ defmodule SocialScribeWeb.AutomationLiveTest do
 
   defp create_automation(%{conn: conn}) do
     user = user_fixture()
-    automation = automation_fixture(%{user_id: user.id})
+    automation = automation_fixture(%{user_id: user.id, is_active: false})
 
     %{conn: log_in_user(conn, user), automation: automation}
   end
@@ -64,10 +64,22 @@ defmodule SocialScribeWeb.AutomationLiveTest do
       assert html =~ "some description"
     end
 
-    test "updates automation in listing", %{conn: conn, automation: automation} do
-      user = user_fixture()
-      conn = log_in_user(conn, user)
+    test "cannot toggle automation if it is already active", %{conn: conn, automation: automation} do
+      _automation_2 =
+        automation_fixture(%{
+          user_id: automation.user_id,
+          platform: automation.platform,
+          is_active: true
+        })
 
+      {:ok, index_live, _html} = live(conn, ~p"/dashboard/automations")
+
+      assert index_live
+             |> element("#automations-#{automation.id} input[phx-click='toggle_automation']")
+             |> render_click() =~ "You can only have one active automation per platform"
+    end
+
+    test "updates automation in listing", %{conn: conn, automation: automation} do
       {:ok, index_live, _html} = live(conn, ~p"/dashboard/automations")
 
       assert index_live |> element("#automations-#{automation.id} a", "Edit") |> render_click() =~
@@ -106,6 +118,21 @@ defmodule SocialScribeWeb.AutomationLiveTest do
 
       assert html =~ "Show Automation"
       assert html =~ automation.name
+    end
+
+    test "cannot toggle automation if it is already active", %{conn: conn, automation: automation} do
+      _automation_2 =
+        automation_fixture(%{
+          user_id: automation.user_id,
+          platform: automation.platform,
+          is_active: true
+        })
+
+      {:ok, index_live, _html} = live(conn, ~p"/dashboard/automations/#{automation}")
+
+      assert index_live
+             |> element("input[phx-click='toggle_automation']")
+             |> render_click() =~ "You can only have one active automation per platform"
     end
 
     test "updates automation within modal", %{conn: conn, automation: automation} do
