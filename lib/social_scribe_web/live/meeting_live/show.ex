@@ -24,7 +24,7 @@ defmodule SocialScribeWeb.MeetingLive.Show do
         |> assign(
           :follow_up_email_form,
           to_form(%{
-            "follow-up-email" => ""
+            follow_up_email: ""
           })
         )
         |> assign(:ai_social_posts_list, [
