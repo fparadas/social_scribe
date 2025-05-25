@@ -113,7 +113,8 @@ defmodule SocialScribe.Bots do
            RecallApi.create_bot(
              calendar_event.hangout_link,
              DateTime.add(calendar_event.start_time, -2, :minute)
-           ) do
+           )
+           |> dbg() do
       create_recall_bot(%{
         user_id: user.id,
         calendar_event_id: calendar_event.id,
@@ -140,6 +141,22 @@ defmodule SocialScribe.Bots do
           {:ok, _} -> delete_recall_bot(bot)
           {:error, reason} -> {:error, {:api_error, reason}}
         end
+    end
+  end
+
+  @doc """
+  Orchestrates updating a bot's schedule via the API and saving it to the database.
+  """
+  def update_bot_schedule(bot, calendar_event) do
+    with {:ok, %{body: api_response}} <-
+           RecallApi.update_bot(
+             bot.recall_bot_id,
+             calendar_event.hangout_link,
+             DateTime.add(calendar_event.start_time, -2, :minute)
+           ) do
+      update_recall_bot(bot, %{
+        status: api_response.status_changes |> List.first() |> Map.get(:code)
+      })
     end
   end
 end

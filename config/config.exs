@@ -77,6 +77,9 @@ config :ueberauth, Ueberauth.Strategy.Google.OAuth,
   client_secret: System.get_env("GOOGLE_CLIENT_SECRET"),
   redirect_uri: "http://localhost:4000/auth/google/callback"
 
+config :social_scribe, :recall_api_key, System.get_env("RECALL_API_KEY")
+config :social_scribe, :recall_region, System.get_env("RECALL_REGION")
+
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
 import_config "#{config_env()}.exs"

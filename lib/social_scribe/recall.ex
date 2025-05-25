@@ -48,4 +48,9 @@ defmodule SocialScribe.Recall do
   def get_bot(recall_bot_id) do
     Tesla.get(client(), "/bot/#{recall_bot_id}")
   end
+
+  @impl SocialScribe.RecallApi
+  def get_bot_transcript(recall_bot_id) do
+    Tesla.get(client(), "/bot/#{recall_bot_id}/transcript")
+  end
 end

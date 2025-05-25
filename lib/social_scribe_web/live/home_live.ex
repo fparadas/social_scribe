@@ -3,6 +3,8 @@ defmodule SocialScribeWeb.HomeLive do
 
   alias SocialScribe.Calendar
   alias SocialScribe.CalendarSyncronizer
+  alias SocialScribe.Bots
+
   require Logger
 
   @impl true
@@ -19,6 +21,34 @@ defmodule SocialScribeWeb.HomeLive do
   end
 
   @impl true
+  def handle_event("toggle_record", %{"id" => event_id}, socket) do
+    event = Calendar.get_calendar_event!(event_id)
+
+    {:ok, event} =
+      Calendar.update_calendar_event(event, %{record_meeting: not event.record_meeting})
+
+    send(self(), {:schedule_bot, event})
+
+    updated_events =
+      Enum.map(socket.assigns.events, fn e ->
+        if e.id == event.id, do: event, else: e
+      end)
+
+    {:noreply, assign(socket, :events, updated_events)}
+  end
+
+  @impl true
+  def handle_info({:schedule_bot, event}, socket) do
+    if event.record_meeting do
+      {:ok, _} = Bots.create_and_dispatch_bot(socket.assigns.current_user, event) |> dbg()
+    else
+      {:ok, _} = Bots.cancel_and_delete_bot(event) |> dbg()
+    end
+
+    {:noreply, socket}
+  end
+
+  @impl true
   def handle_info(:sync_calendars, socket) do
     CalendarSyncronizer.sync_events_for_user(socket.assigns.current_user)
 
@@ -30,20 +60,5 @@ defmodule SocialScribeWeb.HomeLive do
       |> assign(:loading, false)
 
     {:noreply, socket}
-  end
-
-  @impl true
-  def handle_event("toggle_record", %{"id" => event_id}, socket) do
-    event = Calendar.get_calendar_event!(event_id)
-
-    {:ok, event} =
-      Calendar.update_calendar_event(event, %{record_meeting: not event.record_meeting})
-
-    updated_events =
-      Enum.map(socket.assigns.events, fn e ->
-        if e.id == event.id, do: event, else: e
-      end)
-
-    {:noreply, assign(socket, :events, updated_events)}
   end
 end

@@ -184,5 +184,50 @@ defmodule SocialScribe.BotsTest do
       calendar_event = calendar_event_fixture()
       assert {:ok, :no_bot_to_cancel} = Bots.cancel_and_delete_bot(calendar_event)
     end
+
+    test "update_bot_schedule/2 updates bot schedule via API and saves to database" do
+      calendar_event = calendar_event_fixture()
+      bot = recall_bot_fixture(%{calendar_event_id: calendar_event.id})
+
+      expect(RecallApiMock, :update_bot, fn _bot_id, _meeting_url, _start_time ->
+        {:ok,
+         %{
+           body: %{
+             id: "recall_bot_123",
+             video_url: nil,
+             status_changes: [
+               %{
+                 code: "ready",
+                 message: nil,
+                 created_at: "2023-03-23T18:59:40.391872Z"
+               }
+             ],
+             meeting_metadata: nil,
+             meeting_participants: [],
+             speaker_timeline: %{
+               timeline: []
+             },
+             calendar_meeting_id: nil,
+             calendar_user_id: nil,
+             calendar_meetings: []
+           }
+         }}
+      end)
+
+      assert {:ok, %RecallBot{} = updated_bot} = Bots.update_bot_schedule(bot, calendar_event)
+      assert updated_bot.status == "ready"
+    end
+
+    test "update_bot_schedule/2 handles API errors" do
+      calendar_event = calendar_event_fixture()
+      bot = recall_bot_fixture(%{calendar_event_id: calendar_event.id})
+
+      # Mock API error
+      expect(RecallApiMock, :update_bot, fn _bot_id, _meeting_url, _start_time ->
+        {:error, "API Error"}
+      end)
+
+      assert {:error, "API Error"} = Bots.update_bot_schedule(bot, calendar_event)
+    end
   end
 end
