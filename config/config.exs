@@ -7,6 +7,19 @@
 # General application configuration
 import Config
 
+config :social_scribe, Oban,
+  engine: Oban.Engines.Basic,
+  notifier: Oban.Notifiers.Postgres,
+  repo: SocialScribe.Repo,
+  queues: [
+    default: 10,
+    polling: 5
+  ],
+  plugins: [
+    Oban.Plugins.Pruner,
+    {Oban.Plugins.Cron, crontab: [{"*/2 * * * *", SocialScribe.Workers.BotStatusPoller}]}
+  ]
+
 config :social_scribe,
   ecto_repos: [SocialScribe.Repo],
   generators: [timestamp_type: :utc_datetime]
@@ -76,6 +89,9 @@ config :ueberauth, Ueberauth.Strategy.Google.OAuth,
   client_id: System.get_env("GOOGLE_CLIENT_ID"),
   client_secret: System.get_env("GOOGLE_CLIENT_SECRET"),
   redirect_uri: "http://localhost:4000/auth/google/callback"
+
+config :social_scribe, :recall_api_key, System.get_env("RECALL_API_KEY")
+config :social_scribe, :recall_region, System.get_env("RECALL_REGION")
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.

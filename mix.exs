@@ -32,6 +32,9 @@ defmodule SocialScribe.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
+      {:oban_web, "~> 2.11"},
+      {:oban, "~> 2.19"},
+      {:igniter, "~> 0.5", only: [:dev]},
       {:mox, "~> 1.2", only: :test},
       {:timex, "~> 3.0"},
       {:tesla, "~> 1.14"},

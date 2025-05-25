@@ -11,6 +11,7 @@ defmodule SocialScribe.Application do
       SocialScribeWeb.Telemetry,
       SocialScribe.Repo,
       {DNSCluster, query: Application.get_env(:social_scribe, :dns_cluster_query) || :ignore},
+      {Oban, Application.fetch_env!(:social_scribe, Oban)},
       {Phoenix.PubSub, name: SocialScribe.PubSub},
       # Start the Finch HTTP client for sending emails
       {Finch, name: SocialScribe.Finch},
