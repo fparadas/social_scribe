@@ -8,6 +8,9 @@ defmodule SocialScribe.MeetingsTest do
   import SocialScribe.BotsFixtures
   import SocialScribe.MeetingsFixtures
   import SocialScribe.AccountsFixtures
+  import SocialScribe.MeetingTranscriptExample
+
+  @mock_transcript_data %{"data" => meeting_transcript_example()}
 
   describe "meetings" do
     @invalid_attrs %{title: nil, recorded_at: nil, duration_seconds: nil}
@@ -296,6 +299,37 @@ defmodule SocialScribe.MeetingsTest do
       assert participant.name == "Felipe Gomes Paradas"
       assert participant.recall_participant_id == "100"
       assert participant.is_host == true
+    end
+  end
+
+  describe "generate_prompt_for_meeting/1" do
+    test "generates a prompt for a meeting" do
+      meeting = meeting_fixture()
+
+      _meeting_transcript =
+        meeting_transcript_fixture(%{meeting_id: meeting.id, content: @mock_transcript_data})
+
+      meeting_participant = meeting_participant_fixture(%{meeting_id: meeting.id, is_host: true})
+
+      meeting_participant_2 =
+        meeting_participant_fixture(%{meeting_id: meeting.id, is_host: false})
+
+      meeting = Meetings.get_meeting_with_details(meeting.id)
+
+      {:ok, prompt} = Meetings.generate_prompt_for_meeting(meeting)
+
+      assert prompt =~ """
+             ## Meeting Info:
+             title: #{meeting.title}
+             date: #{meeting.recorded_at}
+             duration: #{meeting.duration_seconds} seconds
+
+             ### Participants:
+             #{meeting_participant.name} (Host)
+             #{meeting_participant_2.name} (Participant)
+
+             ### Transcript:
+             """
     end
   end
 end

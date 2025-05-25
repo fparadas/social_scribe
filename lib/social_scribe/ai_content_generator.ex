@@ -3,21 +3,46 @@ defmodule SocialScribe.AIContentGenerator do
 
   @behaviour SocialScribe.AIContentGeneratorApi
 
+  alias SocialScribe.Meetings
+  alias SocialScribe.Automations
+
   @gemini_model "gemini-2.0-flash-light"
   @gemini_api_base_url "https://generativelanguage.googleapis.com/v1beta/models"
 
   @impl SocialScribe.AIContentGeneratorApi
-  def generate_follow_up_email(transcript_content) do
-    prompt = """
-    Based on the following meeting transcript, please draft a concise and professional follow-up email.
-    The email should summarize the key discussion points and clearly list any action items assigned, including who is responsible if mentioned.
-    Keep the tone friendly and action-oriented.
+  def generate_follow_up_email(meeting) do
+    case Meetings.generate_prompt_for_meeting(meeting) do
+      {:error, reason} ->
+        {:error, reason}
 
-    Transcript:
-    #{format_transcript_for_prompt(transcript_content)}
-    """
+      {:ok, meeting_prompt} ->
+        prompt = """
+        Based on the following meeting transcript, please draft a concise and professional follow-up email.
+        The email should summarize the key discussion points and clearly list any action items assigned, including who is responsible if mentioned.
+        Keep the tone friendly and action-oriented.
 
-    call_gemini(prompt)
+        #{meeting_prompt}
+        """
+
+        call_gemini(prompt)
+    end
+  end
+
+  @impl SocialScribe.AIContentGeneratorApi
+  def generate_automation(automation, meeting) do
+    case Meetings.generate_prompt_for_meeting(meeting) do
+      {:error, reason} ->
+        {:error, reason}
+
+      {:ok, meeting_prompt} ->
+        prompt = """
+        #{Automations.generate_prompt_for_automation(automation)}
+
+        #{meeting_prompt}
+        """
+
+        call_gemini(prompt)
+    end
   end
 
   defp call_gemini(prompt_text) do
@@ -57,15 +82,4 @@ defmodule SocialScribe.AIContentGenerator do
        [{"Authorization", "Bearer #{Application.fetch_env!(:social_scribe, :gemini_api_key)}"}]}
     ])
   end
-
-  defp format_transcript_for_prompt(transcript_segments) when is_list(transcript_segments) do
-    Enum.map_join(transcript_segments, "\n", fn segment ->
-      speaker = Map.get(segment, "speaker", "Unknown Speaker")
-      text = Enum.map_join(Map.get(segment, "words", []), " ", &Map.get(&1, "text", ""))
-      "#{speaker}: #{text}"
-    end)
-  end
-
-  # Handle nil or unexpected format
-  defp format_transcript_for_prompt(_), do: ""
 end

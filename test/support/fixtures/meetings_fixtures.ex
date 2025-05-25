@@ -69,7 +69,8 @@ defmodule SocialScribe.MeetingsFixtures do
       |> Enum.into(%{
         is_host: true,
         name: "some name",
-        recall_participant_id: "some recall_participant_id",
+        recall_participant_id:
+          "some recall_participant_id <> #{System.unique_integer([:positive])}",
         meeting_id: meeting_id
       })
       |> SocialScribe.Meetings.create_meeting_participant()
