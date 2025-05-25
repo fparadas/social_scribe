@@ -1,6 +1,7 @@
 defmodule SocialScribe.MeetingInfoExample do
-  def meeting_info_example do
-    %{
+  def meeting_info_example(attrs \\ %{}) do
+    attrs
+    |> Enum.into(%{
       id: "82a235e2-271c-4bb6-891f-2f77704ec313",
       metadata: %{},
       meeting_url: %{meeting_id: "jqq-gusf-vvs", platform: "google_meet"},
@@ -96,6 +97,6 @@ defmodule SocialScribe.MeetingInfoExample do
       },
       calendar_meetings: [],
       recording: "dbdadf20-d25a-4b32-ad03-e0aa61e6df25"
-    }
+    })
   end
 end

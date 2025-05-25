@@ -21,6 +21,11 @@ defmodule SocialScribe.MeetingsTest do
       assert Meetings.get_meeting!(meeting.id) == meeting
     end
 
+    test "get_meeting_by_recall_bot_id/1 returns the meeting with given recall bot id" do
+      meeting = meeting_fixture()
+      assert Meetings.get_meeting_by_recall_bot_id(meeting.recall_bot_id) == meeting
+    end
+
     test "create_meeting/1 with valid data creates a meeting" do
       calendar_event = calendar_event_fixture()
 

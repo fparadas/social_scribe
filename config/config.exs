@@ -7,6 +7,20 @@
 # General application configuration
 import Config
 
+config :social_scribe, Oban,
+  engine: Oban.Engines.Basic,
+  notifier: Oban.Notifiers.Postgres,
+  queues: [default: 10],
+  repo: SocialScribe.Repo,
+  queues: [
+    default: 10,
+    polling: 5
+  ],
+  plugins: [
+    Oban.Plugins.Pruner,
+    {Oban.Plugins.Cron, crontab: [{"*/2 * * * *", SocialScribe.Workers.BotStatusPoller}]}
+  ]
+
 config :social_scribe,
   ecto_repos: [SocialScribe.Repo],
   generators: [timestamp_type: :utc_datetime]

@@ -40,9 +40,9 @@ defmodule SocialScribeWeb.HomeLive do
   @impl true
   def handle_info({:schedule_bot, event}, socket) do
     if event.record_meeting do
-      {:ok, _} = Bots.create_and_dispatch_bot(socket.assigns.current_user, event) |> dbg()
+      {:ok, _} = Bots.create_and_dispatch_bot(socket.assigns.current_user, event)
     else
-      {:ok, _} = Bots.cancel_and_delete_bot(event) |> dbg()
+      {:ok, _} = Bots.cancel_and_delete_bot(event)
     end
 
     {:noreply, socket}

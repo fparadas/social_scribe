@@ -43,6 +43,19 @@ defmodule SocialScribe.Meetings do
   def get_meeting!(id), do: Repo.get!(Meeting, id)
 
   @doc """
+  Gets a meeting by recall bot id.
+
+  ## Examples
+
+      iex> get_meeting_by_recall_bot_id(123)
+      %Meeting{}
+
+  """
+  def get_meeting_by_recall_bot_id(recall_bot_id) do
+    Repo.get_by(Meeting, recall_bot_id: recall_bot_id)
+  end
+
+  @doc """
   Creates a meeting.
 
   ## Examples

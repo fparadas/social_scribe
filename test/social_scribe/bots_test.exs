@@ -18,6 +18,14 @@ defmodule SocialScribe.BotsTest do
       assert Bots.list_recall_bots() == [recall_bot]
     end
 
+    test "list_pending_bots/0 returns all pending recall_bots" do
+      recall_bot = recall_bot_fixture(%{status: "ready"})
+      _recall_bot2 = recall_bot_fixture(%{status: "error"})
+      _recall_bot3 = recall_bot_fixture(%{status: "done"})
+
+      assert Bots.list_pending_bots() == [recall_bot]
+    end
+
     test "get_recall_bot!/1 returns the recall_bot with given id" do
       recall_bot = recall_bot_fixture()
       assert Bots.get_recall_bot!(recall_bot.id) == recall_bot

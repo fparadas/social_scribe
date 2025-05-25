@@ -23,6 +23,15 @@ defmodule SocialScribe.Bots do
   end
 
   @doc """
+  Lists all bots whose status is not yet "done" or "error".
+  These are the bots that the poller should check.
+  """
+  def list_pending_bots do
+    from(b in RecallBot, where: b.status not in ["done", "error", "polling_error"])
+    |> Repo.all()
+  end
+
+  @doc """
   Gets a single recall_bot.
 
   Raises `Ecto.NoResultsError` if the Recall bot does not exist.
