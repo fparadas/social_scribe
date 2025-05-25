@@ -64,6 +64,11 @@ defmodule SocialScribe.Workers.BotStatusPoller do
               "Successfully created meeting record #{meeting.id} from bot #{bot_record.recall_bot_id}"
             )
 
+            SocialScribe.Workers.AIContentGenerationWorker.new(%{meeting_id: meeting.id})
+            |> Oban.insert()
+
+            Logger.info("Enqueued AI content generation for meeting #{meeting.id}")
+
           {:error, reason} ->
             Logger.error(
               "Failed to create meeting record from bot #{bot_record.recall_bot_id}: #{inspect(reason)}"

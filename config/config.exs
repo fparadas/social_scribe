@@ -93,6 +93,7 @@ config :ueberauth, Ueberauth.Strategy.Google.OAuth,
 
 config :social_scribe, :recall_api_key, System.get_env("RECALL_API_KEY")
 config :social_scribe, :recall_region, System.get_env("RECALL_REGION")
+config :social_scribe, :gemini_api_key, System.get_env("GEMINI_API_KEY")
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.

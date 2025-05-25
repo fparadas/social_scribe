@@ -10,6 +10,7 @@ defmodule SocialScribe.Workers.BotStatusPollerTest do
 
   alias SocialScribe.Workers.BotStatusPoller
   alias SocialScribe.RecallApiMock
+  alias SocialScribe.AIContentGeneratorMock, as: AIGeneratorMock
   alias SocialScribe.Bots
   alias SocialScribe.Meetings
 
@@ -66,6 +67,7 @@ defmodule SocialScribe.Workers.BotStatusPollerTest do
   describe "perform/1" do
     setup do
       stub_with(RecallApiMock, SocialScribe.Recall)
+      stub_with(AIGeneratorMock, SocialScribe.AIContentGenerator)
       :ok
     end
 
@@ -122,6 +124,10 @@ defmodule SocialScribe.Workers.BotStatusPollerTest do
         {:ok, %Tesla.Env{body: @mock_transcript_data}}
       end)
 
+      expect(AIGeneratorMock, :generate_follow_up_email, fn @mock_transcript_data ->
+        {:ok, "Follow-up email draft"}
+      end)
+
       assert BotStatusPoller.perform(%Oban.Job{}) == :ok
 
       # Verify bot status was updated
@@ -145,6 +151,12 @@ defmodule SocialScribe.Workers.BotStatusPollerTest do
       assert List.first(participants).name == "Felipe Gomes Paradas"
       assert List.first(participants).recall_participant_id == "100"
       assert List.first(participants).is_host == true
+
+      # Assert AI content generation worker was enqueued
+      assert_enqueued(
+        worker: SocialScribe.Workers.AIContentGenerationWorker,
+        args: %{"meeting_id" => meeting.id}
+      )
     end
 
     test "polls a bot, finds it 'done', but does not re-create meeting if it already exists" do
