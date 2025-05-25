@@ -37,17 +37,13 @@ defmodule SocialScribeWeb.AuthController do
         "provider" => "linkedin"
       })
       when not is_nil(user) do
-    dbg(auth)
-
     case Accounts.find_or_create_user_credential(user, auth) do
       {:ok, _credential} ->
         conn
         |> put_flash(:info, "Linkedin account added successfully.")
         |> redirect(to: ~p"/dashboard/settings")
 
-      {:error, reason} ->
-        dbg(reason)
-
+      {:error, _reason} ->
         conn
         |> put_flash(:error, "Could not add Linkedin account.")
         |> redirect(to: ~p"/dashboard/settings")

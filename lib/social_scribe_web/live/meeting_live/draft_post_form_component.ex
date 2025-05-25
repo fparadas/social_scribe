@@ -2,6 +2,8 @@ defmodule SocialScribeWeb.MeetingLive.DraftPostFormComponent do
   use SocialScribeWeb, :live_component
   import SocialScribeWeb.ClipboardButton
 
+  alias SocialScribe.Poster
+
   @impl true
   def render(assigns) do
     ~H"""
@@ -59,11 +61,31 @@ defmodule SocialScribeWeb.MeetingLive.DraftPostFormComponent do
 
   @impl true
   def handle_event("validate", params, socket) do
-    {:noreply, assign(socket, to_form(params))}
+    {:noreply, assign(socket, form: to_form(params))}
   end
 
   @impl true
-  def handle_event("post", _params, socket) do
-    {:noreply, socket}
+  def handle_event("post", %{"generated_content" => generated_content}, socket) do
+    case Poster.post_on_social_media(
+           socket.assigns.automation.platform,
+           generated_content,
+           socket.assigns.current_user
+         ) do
+      {:ok, _} ->
+        socket =
+          socket
+          |> put_flash(:info, "Post successful")
+          |> push_patch(to: socket.assigns.patch)
+
+        {:noreply, socket}
+
+      {:error, error} ->
+        socket =
+          socket
+          |> put_flash(:error, error)
+          |> push_patch(to: socket.assigns.patch)
+
+        {:noreply, socket}
+    end
   end
 end

@@ -144,6 +144,10 @@ defmodule SocialScribe.Accounts do
   """
   def get_user_credential!(id), do: Repo.get!(UserCredential, id)
 
+  def get_user_linkedin_credential(user) do
+    Repo.get_by(UserCredential, user_id: user.id, provider: "linkedin")
+  end
+
   @doc """
   Gets a user credential by user, provider, and uid.
 
