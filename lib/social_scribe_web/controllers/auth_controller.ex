@@ -1,6 +1,7 @@
 defmodule SocialScribeWeb.AuthController do
   use SocialScribeWeb, :controller
 
+  alias SocialScribe.FacebookApi
   alias SocialScribe.Accounts
   alias SocialScribeWeb.UserAuth
   plug Ueberauth
@@ -46,6 +47,37 @@ defmodule SocialScribeWeb.AuthController do
       {:error, _reason} ->
         conn
         |> put_flash(:error, "Could not add LinkedIn account.")
+        |> redirect(to: ~p"/dashboard/settings")
+    end
+  end
+
+  def callback(%{assigns: %{ueberauth_auth: auth, current_user: user}} = conn, %{
+        "provider" => "facebook"
+      })
+      when not is_nil(user) do
+    case Accounts.find_or_create_user_credential(user, auth) do
+      {:ok, credential} ->
+        case FacebookApi.fetch_user_pages(credential.uid, credential.token) do
+          {:ok, facebook_pages} ->
+            facebook_pages
+            |> Enum.each(fn page ->
+              Accounts.link_facebook_page(user, credential, page)
+            end)
+
+          _ ->
+            :ok
+        end
+
+        conn
+        |> put_flash(
+          :info,
+          "Facebook account added successfully. Please select a page to connect."
+        )
+        |> redirect(to: ~p"/dashboard/settings/facebook_pages")
+
+      {:error, _reason} ->
+        conn
+        |> put_flash(:error, "Could not add Facebook account.")
         |> redirect(to: ~p"/dashboard/settings")
     end
   end
