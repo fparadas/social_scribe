@@ -1,7 +1,31 @@
-<div class="container mx-auto px-4 py-8 md:py-12">
+<div class="container mx-auto px-4 py-8 md:py-12 space-y-8">
   <h1 class="text-3xl md:text-4xl font-bold mb-8 text-slate-800 ">
     {@page_title}
   </h1>
+
+  <div class="bg-white  shadow-xl rounded-lg p-6 md:p-8">
+    <h2 class="text-2xl font-semibold mb-6 text-slate-700 ">
+      Bot Preferences
+    </h2>
+
+    <.simple_form
+      for={@user_bot_preference_form}
+      phx-change="validate_user_bot_preference"
+      phx-submit="update_user_bot_preference"
+    >
+      <.input field={@user_bot_preference_form[:user_id]} type="hidden" value={@current_user.id} />
+      <.input
+        field={@user_bot_preference_form[:join_minute_offset]}
+        type="number"
+        label="Join Minute Offset"
+        value={Map.get(@user_bot_preference, :join_minute_offset, 2)}
+      />
+
+      <:actions>
+        <.button type="submit" phx-disable-with="Saving...">Save</.button>
+      </:actions>
+    </.simple_form>
+  </div>
 
   <div class="bg-white  shadow-xl rounded-lg p-6 md:p-8">
     <h2 class="text-2xl font-semibold mb-6 text-slate-700 ">
