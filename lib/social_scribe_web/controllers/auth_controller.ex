@@ -6,6 +6,8 @@ defmodule SocialScribeWeb.AuthController do
   alias SocialScribeWeb.UserAuth
   plug Ueberauth
 
+  require Logger
+
   @doc """
   Handles the initial request to the provider (e.g., Google).
   Ueberauth's plug will redirect the user to the provider's consent page.
@@ -21,6 +23,9 @@ defmodule SocialScribeWeb.AuthController do
         "provider" => "google"
       })
       when not is_nil(user) do
+    Logger.info("Google callback")
+    Logger.info(auth)
+
     case Accounts.find_or_create_user_credential(user, auth) do
       {:ok, _credential} ->
         conn
