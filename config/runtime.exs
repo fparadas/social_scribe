@@ -36,6 +36,23 @@ config :social_scribe, :recall_api_key, System.get_env("RECALL_API_KEY")
 config :social_scribe, :recall_region, System.get_env("RECALL_REGION")
 config :social_scribe, :gemini_api_key, System.get_env("GEMINI_API_KEY")
 
+config :ueberauth, Ueberauth,
+  providers: [
+    google:
+      {Ueberauth.Strategy.Google,
+       [
+         default_scope: "email profile https://www.googleapis.com/auth/calendar.readonly",
+         extra_params: [access_type: "offline", prompt: "consent"]
+       ]},
+    linkedin:
+      {Ueberauth.Strategy.LinkedIn, [default_scope: "openid profile email w_member_social"]},
+    facebook:
+      {Ueberauth.Strategy.Facebook,
+       [
+         default_scope: "email,public_profile,pages_show_list,pages_manage_posts"
+       ]}
+  ]
+
 if System.get_env("PHX_SERVER") do
   config :social_scribe, SocialScribeWeb.Endpoint, server: true
 end
