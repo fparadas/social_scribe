@@ -102,7 +102,10 @@ defmodule SocialScribeWeb.AuthController do
         conn
         |> UserAuth.log_in_user(user)
 
-      {:error, _reason} ->
+      {:error, reason} ->
+        Logger.info("error")
+        Logger.info(reason)
+
         conn
         |> put_flash(:error, "There was an error signing you in.")
         |> redirect(to: ~p"/")
