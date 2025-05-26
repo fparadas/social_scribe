@@ -41,19 +41,15 @@ Social Scribe is a powerful Elixir and Phoenix LiveView application designed to 
 
 ## 📸 Screenshots & GIFs
 
-**(These are crucial! Add some visuals of your app in action.)**
 
 * **Dashboard View:**
-    `[ Placeholder: Screenshot of the dashboard showing upcoming calendar events with notetaker toggles. ]`
+    ![Dashboard View](readme_assets/dashboard_view.png)
 
 * **Meeting Details Page:**
-    `[ Placeholder: Screenshot or GIF of a meeting's show page, displaying the transcript, AI-generated email, and automation results. ]`
+    ![Meeting Details](readme_assets/meetings.mov)
 
 * **Automation Configuration UI:**
-    `[ Placeholder: Screenshot of the UI where users can create or edit an automation template, similar to image_58cda7.jpg. ]`
-
-* **Social Media Posting Flow:**
-    `[ Placeholder: GIF showing a user clicking "Post to LinkedIn" and the content appearing on LinkedIn. ]`
+    ![Automation Configuration](readme_assets/edit_automation.png)
 
 ---
 
@@ -150,7 +146,6 @@ Now you can visit [`localhost:4000`](http://localhost:4000) from your browser.
     * Posting to Facebook is implemented via the Graph API to a user-managed Page.
     * Full functionality for all users (especially those not app administrators/developers/testers) typically requires a thorough app review process by Meta, potentially including Business Verification. This is standard for apps using Page APIs.
     * During development, posting will be most reliable for app admins to Pages they directly manage.
-* **Platform Logos for Past Meetings:** The display of platform-specific logos (Zoom, Teams, Meet) in the "Past Meetings" list is a UI enhancement to be completed.
 * **Error Handling & UI Polish:** While core paths are robustly handled, comprehensive error feedback for all API edge cases and advanced UI polish are areas for continued development beyond the initial 48-hour scope.
 * **Prompt Templating for Automations:** The current automation prompt templating is basic (string replacement). A more sophisticated templating engine (e.g., EEx or a dedicated library) would be a future improvement.
 * **Agenda Integration:** Currently we only sync when the calendar event has a `hangoutLink` or `location` field with a zoom or google meet link.

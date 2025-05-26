@@ -128,7 +128,7 @@ defmodule SocialScribe.Meetings do
       join: ce in assoc(m, :calendar_event),
       where: ce.user_id == ^user.id,
       order_by: [desc: m.recorded_at],
-      preload: [:meeting_transcript, :meeting_participants]
+      preload: [:meeting_transcript, :meeting_participants, :recall_bot]
     )
     |> Repo.all()
   end
