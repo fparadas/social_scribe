@@ -3,7 +3,7 @@ defmodule SocialScribe.Bots.UserBotPreference do
   import Ecto.Changeset
 
   schema "user_bot_preferences" do
-    field :join_minute_offset, :integer
+    field :join_minute_offset, :integer, default: 2
     belongs_to :user, SocialScribe.Accounts.User
 
     timestamps(type: :utc_datetime)

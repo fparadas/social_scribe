@@ -3,7 +3,7 @@ defmodule SocialScribe.Repo.Migrations.CreateUserBotPreferences do
 
   def change do
     create table(:user_bot_preferences) do
-      add :join_minute_offset, :integer
+      add :join_minute_offset, :integer, null: false, default: 2
       add :user_id, references(:users, on_delete: :nothing)
 
       timestamps(type: :utc_datetime)
