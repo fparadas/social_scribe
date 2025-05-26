@@ -339,12 +339,12 @@ defmodule SocialScribe.BotsTest do
 
     test "create_user_bot_preference/1 with valid data creates a user_bot_preference" do
       user = user_fixture()
-      valid_attrs = %{join_minute_offset: 42, user_id: user.id}
+      valid_attrs = %{join_minute_offset: 1, user_id: user.id}
 
       assert {:ok, %UserBotPreference{} = user_bot_preference} =
                Bots.create_user_bot_preference(valid_attrs)
 
-      assert user_bot_preference.join_minute_offset == 42
+      assert user_bot_preference.join_minute_offset == 1
     end
 
     test "create_user_bot_preference/1 with invalid data returns error changeset" do
@@ -353,12 +353,12 @@ defmodule SocialScribe.BotsTest do
 
     test "update_user_bot_preference/2 with valid data updates the user_bot_preference" do
       user_bot_preference = user_bot_preference_fixture()
-      update_attrs = %{join_minute_offset: 43}
+      update_attrs = %{join_minute_offset: 9}
 
       assert {:ok, %UserBotPreference{} = user_bot_preference} =
                Bots.update_user_bot_preference(user_bot_preference, update_attrs)
 
-      assert user_bot_preference.join_minute_offset == 43
+      assert user_bot_preference.join_minute_offset == 9
     end
 
     test "update_user_bot_preference/2 with invalid data returns error changeset" do

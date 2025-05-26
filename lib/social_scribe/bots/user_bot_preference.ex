@@ -15,5 +15,6 @@ defmodule SocialScribe.Bots.UserBotPreference do
     |> cast(attrs, [:user_id, :join_minute_offset])
     |> validate_required([:user_id, :join_minute_offset])
     |> unique_constraint(:user_id)
+    |> validate_inclusion(:join_minute_offset, 0..10, message: "must be between 0 and 10")
   end
 end
