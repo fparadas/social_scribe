@@ -1,6 +1,7 @@
 defmodule SocialScribeWeb.MeetingLive.Show do
   use SocialScribeWeb, :live_view
 
+  import SocialScribeWeb.PlatformLogo
   import SocialScribeWeb.ClipboardButton
 
   alias SocialScribe.Meetings

@@ -100,7 +100,8 @@ defmodule SocialScribe.MeetingsTest do
       assert Meetings.list_user_meetings(user) ==
                Repo.preload([meeting], [
                  :meeting_transcript,
-                 :meeting_participants
+                 :meeting_participants,
+                 :recall_bot
                ])
     end
 
