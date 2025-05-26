@@ -63,31 +63,18 @@ defmodule SocialScribeWeb.UserSettingsLive do
 
   @impl true
   def handle_event("update_user_bot_preference", %{"user_bot_preference" => params}, socket) do
-    case socket.assigns.user_bot_preference do
-      %Bots.UserBotPreference{id: nil} ->
-        case Bots.create_user_bot_preference(
-               Map.put(params, "user_id", socket.assigns.current_user.id)
-             ) do
-          {:ok, _} ->
-            {:noreply, socket}
+    params = Map.put(params, "user_id", socket.assigns.current_user.id)
 
-          {:error, changeset} ->
-            {:noreply,
-             assign(socket, :user_bot_preference_form, to_form(changeset, action: :validate))}
-        end
+    case create_or_update_user_bot_preference(socket.assigns.user_bot_preference, params) do
+      {:ok, bot_preference} ->
+        {:noreply,
+         socket
+         |> assign(:user_bot_preference, bot_preference)
+         |> put_flash(:info, "Bot preference updated successfully")}
 
-      bot_preference ->
-        case Bots.update_user_bot_preference(
-               bot_preference,
-               Map.put(params, "user_id", socket.assigns.current_user.id)
-             ) do
-          {:ok, _} ->
-            {:noreply, socket}
-
-          {:error, changeset} ->
-            {:noreply,
-             assign(socket, :user_bot_preference_form, to_form(changeset, action: :validate))}
-        end
+      {:error, changeset} ->
+        {:noreply,
+         assign(socket, :user_bot_preference_form, to_form(changeset, action: :validate))}
     end
   end
 
@@ -111,6 +98,16 @@ defmodule SocialScribeWeb.UserSettingsLive do
 
       {:error, changeset} ->
         {:noreply, assign(socket, :form, to_form(changeset, action: :validate))}
+    end
+  end
+
+  defp create_or_update_user_bot_preference(bot_preference, params) do
+    case bot_preference do
+      %Bots.UserBotPreference{id: nil} ->
+        Bots.create_user_bot_preference(params)
+
+      bot_preference ->
+        Bots.update_user_bot_preference(bot_preference, params)
     end
   end
 end
