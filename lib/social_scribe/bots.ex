@@ -118,10 +118,19 @@ defmodule SocialScribe.Bots do
   Orchestrates creating a bot via the API and saving it to the database.
   """
   def create_and_dispatch_bot(user, calendar_event) do
+    user_bot_preference = get_user_bot_preference(user.id) || %{}
+
+    join_minute_offset =
+      Map.get(user_bot_preference, :join_minute_offset, 2)
+
     with {:ok, %{body: api_response}} <-
            RecallApi.create_bot(
              calendar_event.hangout_link,
-             DateTime.add(calendar_event.start_time, -2, :minute)
+             DateTime.add(
+               calendar_event.start_time,
+               -join_minute_offset,
+               :minute
+             )
            ) do
       create_recall_bot(%{
         user_id: user.id,
@@ -156,15 +165,120 @@ defmodule SocialScribe.Bots do
   Orchestrates updating a bot's schedule via the API and saving it to the database.
   """
   def update_bot_schedule(bot, calendar_event) do
+    user_bot_preference = get_user_bot_preference(bot.user_id) || %{}
+
+    join_minute_offset =
+      Map.get(user_bot_preference, :join_minute_offset, 2)
+
     with {:ok, %{body: api_response}} <-
            RecallApi.update_bot(
              bot.recall_bot_id,
              calendar_event.hangout_link,
-             DateTime.add(calendar_event.start_time, -2, :minute)
+             DateTime.add(calendar_event.start_time, -join_minute_offset, :minute)
            ) do
       update_recall_bot(bot, %{
         status: api_response.status_changes |> List.first() |> Map.get(:code)
       })
     end
+  end
+
+  alias SocialScribe.Bots.UserBotPreference
+
+  @doc """
+  Returns the list of user_bot_preferences.
+
+  ## Examples
+
+      iex> list_user_bot_preferences()
+      [%UserBotPreference{}, ...]
+
+  """
+  def list_user_bot_preferences do
+    Repo.all(UserBotPreference)
+  end
+
+  @doc """
+  Gets a single user_bot_preference.
+
+  Raises `Ecto.NoResultsError` if the User bot preference does not exist.
+
+  ## Examples
+
+      iex> get_user_bot_preference!(123)
+      %UserBotPreference{}
+
+      iex> get_user_bot_preference!(456)
+      ** (Ecto.NoResultsError)
+
+  """
+  def get_user_bot_preference!(id), do: Repo.get!(UserBotPreference, id)
+
+  def get_user_bot_preference(user_id) do
+    Repo.get_by(UserBotPreference, user_id: user_id)
+  end
+
+  @doc """
+  Creates a user_bot_preference.
+
+  ## Examples
+
+      iex> create_user_bot_preference(%{field: value})
+      {:ok, %UserBotPreference{}}
+
+      iex> create_user_bot_preference(%{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def create_user_bot_preference(attrs \\ %{}) do
+    %UserBotPreference{}
+    |> UserBotPreference.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  @doc """
+  Updates a user_bot_preference.
+
+  ## Examples
+
+      iex> update_user_bot_preference(user_bot_preference, %{field: new_value})
+      {:ok, %UserBotPreference{}}
+
+      iex> update_user_bot_preference(user_bot_preference, %{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def update_user_bot_preference(%UserBotPreference{} = user_bot_preference, attrs) do
+    user_bot_preference
+    |> UserBotPreference.changeset(attrs)
+    |> Repo.update()
+  end
+
+  @doc """
+  Deletes a user_bot_preference.
+
+  ## Examples
+
+      iex> delete_user_bot_preference(user_bot_preference)
+      {:ok, %UserBotPreference{}}
+
+      iex> delete_user_bot_preference(user_bot_preference)
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def delete_user_bot_preference(%UserBotPreference{} = user_bot_preference) do
+    Repo.delete(user_bot_preference)
+  end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for tracking user_bot_preference changes.
+
+  ## Examples
+
+      iex> change_user_bot_preference(user_bot_preference)
+      %Ecto.Changeset{data: %UserBotPreference{}}
+
+  """
+  def change_user_bot_preference(%UserBotPreference{} = user_bot_preference, attrs \\ %{}) do
+    UserBotPreference.changeset(user_bot_preference, attrs)
   end
 end
