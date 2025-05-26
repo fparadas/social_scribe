@@ -93,25 +93,6 @@ config :ueberauth, Ueberauth,
        ]}
   ]
 
-config :ueberauth, Ueberauth.Strategy.Google.OAuth,
-  client_id: System.get_env("GOOGLE_CLIENT_ID"),
-  client_secret: System.get_env("GOOGLE_CLIENT_SECRET"),
-  redirect_uri: System.get_env("GOOGLE_REDIRECT_URI")
-
-config :ueberauth, Ueberauth.Strategy.LinkedIn.OAuth,
-  client_id: System.get_env("LINKEDIN_CLIENT_ID"),
-  client_secret: System.get_env("LINKEDIN_CLIENT_SECRET"),
-  redirect_uri: System.get_env("LINKEDIN_REDIRECT_URI")
-
-config :ueberauth, Ueberauth.Strategy.Facebook.OAuth,
-  client_id: System.get_env("FACEBOOK_CLIENT_ID"),
-  client_secret: System.get_env("FACEBOOK_CLIENT_SECRET"),
-  redirect_uri: System.get_env("FACEBOOK_REDIRECT_URI")
-
-config :social_scribe, :recall_api_key, System.get_env("RECALL_API_KEY")
-config :social_scribe, :recall_region, System.get_env("RECALL_REGION")
-config :social_scribe, :gemini_api_key, System.get_env("GEMINI_API_KEY")
-
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
 import_config "#{config_env()}.exs"
