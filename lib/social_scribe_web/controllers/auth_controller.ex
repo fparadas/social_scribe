@@ -23,6 +23,9 @@ defmodule SocialScribeWeb.AuthController do
         "provider" => "google"
       })
       when not is_nil(user) do
+    Logger.info("Google OAuth")
+    Logger.info(auth)
+
     case Accounts.find_or_create_user_credential(user, auth) do
       {:ok, _credential} ->
         conn
@@ -40,6 +43,9 @@ defmodule SocialScribeWeb.AuthController do
         "provider" => "linkedin"
       })
       when not is_nil(user) do
+    Logger.info("LinkedIn OAuth")
+    Logger.info(auth)
+
     case Accounts.find_or_create_user_credential(user, auth) do
       {:ok, _credential} ->
         conn
@@ -57,6 +63,9 @@ defmodule SocialScribeWeb.AuthController do
         "provider" => "facebook"
       })
       when not is_nil(user) do
+    Logger.info("Facebook OAuth")
+    Logger.info(auth)
+
     case Accounts.find_or_create_user_credential(user, auth) do
       {:ok, credential} ->
         case FacebookApi.fetch_user_pages(credential.uid, credential.token) do
@@ -85,7 +94,7 @@ defmodule SocialScribeWeb.AuthController do
   end
 
   def callback(%{assigns: %{ueberauth_auth: auth}} = conn, _params) do
-    Logger.info("Google callback")
+    Logger.info("Google OAuth Login")
     Logger.info(auth)
 
     case Accounts.find_or_create_user_from_oauth(auth) do
