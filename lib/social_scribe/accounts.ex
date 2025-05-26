@@ -238,9 +238,13 @@ defmodule SocialScribe.Accounts do
     Repo.transaction(fn ->
       user = find_or_create_user(auth.provider, auth.uid, auth.info.email)
 
-      find_or_create_user_credential(user, auth)
+      case find_or_create_user_credential(user, auth) do
+        {:ok, _} ->
+          user
 
-      user
+        {:error, _} ->
+          Repo.rollback(:cannot_create_user_credential)
+      end
     end)
   end
 
