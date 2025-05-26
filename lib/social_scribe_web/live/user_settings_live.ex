@@ -65,7 +65,9 @@ defmodule SocialScribeWeb.UserSettingsLive do
   def handle_event("update_user_bot_preference", %{"user_bot_preference" => params}, socket) do
     case socket.assigns.user_bot_preference do
       %Bots.UserBotPreference{id: nil} ->
-        case Bots.create_user_bot_preference(params) do
+        case Bots.create_user_bot_preference(
+               Map.put(params, "user_id", socket.assigns.current_user.id)
+             ) do
           {:ok, _} ->
             {:noreply, socket}
 
@@ -75,7 +77,10 @@ defmodule SocialScribeWeb.UserSettingsLive do
         end
 
       bot_preference ->
-        case Bots.update_user_bot_preference(bot_preference, params) do
+        case Bots.update_user_bot_preference(
+               bot_preference,
+               Map.put(params, "user_id", socket.assigns.current_user.id)
+             ) do
           {:ok, _} ->
             {:noreply, socket}
 

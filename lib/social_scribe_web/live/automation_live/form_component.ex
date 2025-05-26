@@ -19,7 +19,6 @@ defmodule SocialScribeWeb.AutomationLive.FormComponent do
         phx-change="validate"
         phx-submit="save"
       >
-        <.input field={@form[:user_id]} type="hidden" value={@current_user.id} />
         <.input field={@form[:name]} type="text" label="Name" />
         <.input
           field={@form[:platform]}
@@ -49,7 +48,12 @@ defmodule SocialScribeWeb.AutomationLive.FormComponent do
 
   @impl true
   def handle_event("validate", %{"automation" => automation_params}, socket) do
-    changeset = Automations.change_automation(socket.assigns.automation, automation_params)
+    changeset =
+      Automations.change_automation(
+        socket.assigns.automation,
+        Map.put(automation_params, "user_id", socket.assigns.current_user.id)
+      )
+
     {:noreply, assign(socket, form: to_form(changeset, action: :validate))}
   end
 
@@ -58,7 +62,9 @@ defmodule SocialScribeWeb.AutomationLive.FormComponent do
   end
 
   defp save_automation(socket, :edit, automation_params) do
-    case Automations.update_automation(socket.assigns.automation, automation_params) do
+    params = Map.put(automation_params, "user_id", socket.assigns.current_user.id)
+
+    case Automations.update_automation(socket.assigns.automation, params) do
       {:ok, automation} ->
         notify_parent({:saved, automation})
 
@@ -73,7 +79,9 @@ defmodule SocialScribeWeb.AutomationLive.FormComponent do
   end
 
   defp save_automation(socket, :new, automation_params) do
-    case Automations.create_automation(automation_params) do
+    params = Map.put(automation_params, "user_id", socket.assigns.current_user.id)
+
+    case Automations.create_automation(params) do
       {:ok, automation} ->
         notify_parent({:saved, automation})
 

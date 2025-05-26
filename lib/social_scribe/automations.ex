@@ -103,7 +103,7 @@ defmodule SocialScribe.Automations do
 
   defp sanitize_keys({key, value}) when is_atom(key), do: {key, value}
 
-  defp sanitize_keys({key, value}) when is_binary(value),
+  defp sanitize_keys({key, value}) when is_binary(key),
     do: {String.to_existing_atom(key), value}
 
   @doc """
