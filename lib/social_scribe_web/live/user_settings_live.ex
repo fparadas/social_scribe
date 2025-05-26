@@ -2,6 +2,7 @@ defmodule SocialScribeWeb.UserSettingsLive do
   use SocialScribeWeb, :live_view
 
   alias SocialScribe.Accounts
+  alias SocialScribe.Bots
 
   @impl true
   def mount(_params, _session, socket) do
@@ -13,12 +14,19 @@ defmodule SocialScribeWeb.UserSettingsLive do
 
     facebook_accounts = Accounts.list_user_credentials(current_user, provider: "facebook")
 
+    user_bot_preference =
+      Bots.get_user_bot_preference(current_user.id) || %Bots.UserBotPreference{}
+
+    changeset = Bots.change_user_bot_preference(user_bot_preference)
+
     socket =
       socket
       |> assign(:page_title, "User Settings")
       |> assign(:google_accounts, google_accounts)
       |> assign(:linkedin_accounts, linkedin_accounts)
       |> assign(:facebook_accounts, facebook_accounts)
+      |> assign(:user_bot_preference, user_bot_preference)
+      |> assign(:user_bot_preference_form, to_form(changeset))
 
     {:ok, socket}
   end
@@ -45,6 +53,32 @@ defmodule SocialScribeWeb.UserSettingsLive do
   end
 
   @impl true
+  def handle_event("validate_user_bot_preference", %{"user_bot_preference" => params}, socket) do
+    changeset =
+      socket.assigns.user_bot_preference
+      |> Bots.change_user_bot_preference(params)
+
+    {:noreply, assign(socket, :user_bot_preference_form, to_form(changeset, action: :validate))}
+  end
+
+  @impl true
+  def handle_event("update_user_bot_preference", %{"user_bot_preference" => params}, socket) do
+    params = Map.put(params, "user_id", socket.assigns.current_user.id)
+
+    case create_or_update_user_bot_preference(socket.assigns.user_bot_preference, params) do
+      {:ok, bot_preference} ->
+        {:noreply,
+         socket
+         |> assign(:user_bot_preference, bot_preference)
+         |> put_flash(:info, "Bot preference updated successfully")}
+
+      {:error, changeset} ->
+        {:noreply,
+         assign(socket, :user_bot_preference_form, to_form(changeset, action: :validate))}
+    end
+  end
+
+  @impl true
   def handle_event("validate", params, socket) do
     {:noreply, assign(socket, :form, to_form(params))}
   end
@@ -64,6 +98,16 @@ defmodule SocialScribeWeb.UserSettingsLive do
 
       {:error, changeset} ->
         {:noreply, assign(socket, :form, to_form(changeset, action: :validate))}
+    end
+  end
+
+  defp create_or_update_user_bot_preference(bot_preference, params) do
+    case bot_preference do
+      %Bots.UserBotPreference{id: nil} ->
+        Bots.create_user_bot_preference(params)
+
+      bot_preference ->
+        Bots.update_user_bot_preference(bot_preference, params)
     end
   end
 end

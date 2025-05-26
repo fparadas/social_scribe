@@ -33,4 +33,21 @@ defmodule SocialScribe.BotsFixtures do
 
     recall_bot
   end
+
+  @doc """
+  Generate a user_bot_preference.
+  """
+  def user_bot_preference_fixture(attrs \\ %{}) do
+    user_id = attrs[:user_id] || user_fixture().id
+
+    {:ok, user_bot_preference} =
+      attrs
+      |> Enum.into(%{
+        join_minute_offset: 2,
+        user_id: user_id
+      })
+      |> SocialScribe.Bots.create_user_bot_preference()
+
+    user_bot_preference
+  end
 end

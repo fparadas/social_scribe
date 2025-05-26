@@ -104,7 +104,9 @@ defmodule SocialScribe.BotsTest do
       calendar_event = calendar_event_fixture(%{user_id: user.id})
 
       # Mock successful API response
-      expect(RecallApiMock, :create_bot, fn _meeting_url, _start_time ->
+      expect(RecallApiMock, :create_bot, fn _meeting_url, start_time ->
+        assert start_time == DateTime.add(calendar_event.start_time, -2, :minute)
+
         {:ok,
          %{
            body: %{
@@ -134,6 +136,45 @@ defmodule SocialScribe.BotsTest do
       assert bot.calendar_event_id == calendar_event.id
       assert bot.recall_bot_id == "recall_bot_123"
       assert bot.meeting_url == calendar_event.hangout_link
+    end
+
+    test "create_and_dispatch_bot/2 uses user_bot_preference join_minute_offset" do
+      user = user_fixture()
+
+      _user_bot_preference =
+        user_bot_preference_fixture(%{user_id: user.id, join_minute_offset: 10})
+
+      calendar_event = calendar_event_fixture(%{user_id: user.id})
+
+      expect(RecallApiMock, :create_bot, fn _meeting_url, start_time ->
+        assert start_time == DateTime.add(calendar_event.start_time, -10, :minute)
+
+        {:ok,
+         %{
+           body: %{
+             id: "recall_bot_123",
+             video_url: nil,
+             status_changes: [
+               %{
+                 code: "ready",
+                 message: nil,
+                 created_at: "2023-03-23T18:59:40.391872Z"
+               }
+             ],
+             meeting_metadata: nil,
+             meeting_participants: [],
+             speaker_timeline: %{
+               timeline: []
+             },
+             calendar_meeting_id: nil,
+             calendar_user_id: nil,
+             calendar_meetings: []
+           }
+         }}
+      end)
+
+      assert {:ok, %RecallBot{} = bot} = Bots.create_and_dispatch_bot(user, calendar_event)
+      assert bot.user_id == user.id
     end
 
     test "create_and_dispatch_bot/2 handles API errors" do
@@ -197,7 +238,47 @@ defmodule SocialScribe.BotsTest do
       calendar_event = calendar_event_fixture()
       bot = recall_bot_fixture(%{calendar_event_id: calendar_event.id})
 
-      expect(RecallApiMock, :update_bot, fn _bot_id, _meeting_url, _start_time ->
+      expect(RecallApiMock, :update_bot, fn _bot_id, _meeting_url, start_time ->
+        assert start_time == DateTime.add(calendar_event.start_time, -2, :minute)
+
+        {:ok,
+         %{
+           body: %{
+             id: "recall_bot_123",
+             video_url: nil,
+             status_changes: [
+               %{
+                 code: "ready",
+                 message: nil,
+                 created_at: "2023-03-23T18:59:40.391872Z"
+               }
+             ],
+             meeting_metadata: nil,
+             meeting_participants: [],
+             speaker_timeline: %{
+               timeline: []
+             },
+             calendar_meeting_id: nil,
+             calendar_user_id: nil,
+             calendar_meetings: []
+           }
+         }}
+      end)
+
+      assert {:ok, %RecallBot{} = updated_bot} = Bots.update_bot_schedule(bot, calendar_event)
+      assert updated_bot.status == "ready"
+    end
+
+    test "update_bot_schedule/2 uses user_bot_preference join_minute_offset" do
+      calendar_event = calendar_event_fixture()
+      bot = recall_bot_fixture(%{calendar_event_id: calendar_event.id})
+
+      _user_bot_preference =
+        user_bot_preference_fixture(%{user_id: bot.user_id, join_minute_offset: 10})
+
+      expect(RecallApiMock, :update_bot, fn _bot_id, _meeting_url, start_time ->
+        assert start_time == DateTime.add(calendar_event.start_time, -10, :minute)
+
         {:ok,
          %{
            body: %{
@@ -236,6 +317,71 @@ defmodule SocialScribe.BotsTest do
       end)
 
       assert {:error, "API Error"} = Bots.update_bot_schedule(bot, calendar_event)
+    end
+  end
+
+  describe "user_bot_preferences" do
+    alias SocialScribe.Bots.UserBotPreference
+
+    import SocialScribe.BotsFixtures
+
+    @invalid_attrs %{join_minute_offset: nil}
+
+    test "list_user_bot_preferences/0 returns all user_bot_preferences" do
+      user_bot_preference = user_bot_preference_fixture()
+      assert Bots.list_user_bot_preferences() == [user_bot_preference]
+    end
+
+    test "get_user_bot_preference!/1 returns the user_bot_preference with given id" do
+      user_bot_preference = user_bot_preference_fixture()
+      assert Bots.get_user_bot_preference!(user_bot_preference.id) == user_bot_preference
+    end
+
+    test "create_user_bot_preference/1 with valid data creates a user_bot_preference" do
+      user = user_fixture()
+      valid_attrs = %{join_minute_offset: 1, user_id: user.id}
+
+      assert {:ok, %UserBotPreference{} = user_bot_preference} =
+               Bots.create_user_bot_preference(valid_attrs)
+
+      assert user_bot_preference.join_minute_offset == 1
+    end
+
+    test "create_user_bot_preference/1 with invalid data returns error changeset" do
+      assert {:error, %Ecto.Changeset{}} = Bots.create_user_bot_preference(@invalid_attrs)
+    end
+
+    test "update_user_bot_preference/2 with valid data updates the user_bot_preference" do
+      user_bot_preference = user_bot_preference_fixture()
+      update_attrs = %{join_minute_offset: 9}
+
+      assert {:ok, %UserBotPreference{} = user_bot_preference} =
+               Bots.update_user_bot_preference(user_bot_preference, update_attrs)
+
+      assert user_bot_preference.join_minute_offset == 9
+    end
+
+    test "update_user_bot_preference/2 with invalid data returns error changeset" do
+      user_bot_preference = user_bot_preference_fixture()
+
+      assert {:error, %Ecto.Changeset{}} =
+               Bots.update_user_bot_preference(user_bot_preference, @invalid_attrs)
+
+      assert user_bot_preference == Bots.get_user_bot_preference!(user_bot_preference.id)
+    end
+
+    test "delete_user_bot_preference/1 deletes the user_bot_preference" do
+      user_bot_preference = user_bot_preference_fixture()
+      assert {:ok, %UserBotPreference{}} = Bots.delete_user_bot_preference(user_bot_preference)
+
+      assert_raise Ecto.NoResultsError, fn ->
+        Bots.get_user_bot_preference!(user_bot_preference.id)
+      end
+    end
+
+    test "change_user_bot_preference/1 returns a user_bot_preference changeset" do
+      user_bot_preference = user_bot_preference_fixture()
+      assert %Ecto.Changeset{} = Bots.change_user_bot_preference(user_bot_preference)
     end
   end
 end
