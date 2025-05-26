@@ -39,14 +39,33 @@ Social Scribe is a powerful Elixir and Phoenix LiveView application designed to 
 
 ---
 
+## App Flow
+
+* **Login With Google and Meetins Sync:**
+    ![Auth Flow](https://youtu.be/RM7YSlu5ZDg)
+
+* **Creating Automations:**
+    ![Creating Automations](https://youtu.be/V2tIKgUQYEw)
+
+* **Meetings Recordings:**
+    ![Meetings Recording](https://youtu.be/pZrLsoCfUeA)
+
+* **Facebook Login:**
+    ![Facebook Login](https://youtu.be/JRhPqCN-jeI)
+
+* **Facebook Post:**
+    ![Facebook Post](https://youtu.be/4w6zpz0Rn2o)
+
+* **LinkedIn Login & Post:**
+    ![LinkedIn Login and Post](https://youtu.be/wuD_zefGy2k)
+---
+
 ## 📸 Screenshots & GIFs
 
 
 * **Dashboard View:**
     ![Dashboard View](readme_assets/dashboard_view.png)
 
-* **Meeting Details Page:**
-    ![Meeting Details](readme_assets/meetings.mov)
 
 * **Automation Configuration UI:**
     ![Automation Configuration](readme_assets/edit_automation.png)

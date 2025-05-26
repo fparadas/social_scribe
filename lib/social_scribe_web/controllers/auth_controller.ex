@@ -41,18 +41,22 @@ defmodule SocialScribeWeb.AuthController do
 
   def callback(%{assigns: %{ueberauth_auth: auth, current_user: user}} = conn, %{
         "provider" => "linkedin"
-      })
-      when not is_nil(user) do
+      }) do
     Logger.info("LinkedIn OAuth")
     Logger.info(auth)
 
     case Accounts.find_or_create_user_credential(user, auth) do
-      {:ok, _credential} ->
+      {:ok, credential} ->
+        Logger.info("credential")
+        Logger.info(credential)
+
         conn
         |> put_flash(:info, "LinkedIn account added successfully.")
         |> redirect(to: ~p"/dashboard/settings")
 
-      {:error, _reason} ->
+      {:error, reason} ->
+        Logger.error(reason)
+
         conn
         |> put_flash(:error, "Could not add LinkedIn account.")
         |> redirect(to: ~p"/dashboard/settings")
@@ -113,6 +117,9 @@ defmodule SocialScribeWeb.AuthController do
   end
 
   def callback(conn, _params) do
+    Logger.error("OAuth Login")
+    Logger.error(conn)
+
     conn
     |> put_flash(:error, "There was an error signing you in. Please try again.")
     |> redirect(to: ~p"/")

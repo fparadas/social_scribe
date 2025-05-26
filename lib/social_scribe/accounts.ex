@@ -10,8 +10,6 @@ defmodule SocialScribe.Accounts do
 
   alias SocialScribe.Accounts.{User, UserToken, UserCredential}
 
-  require Logger
-
   ## Database getters
 
   @doc """
@@ -237,23 +235,14 @@ defmodule SocialScribe.Accounts do
   ## OAuth
 
   def find_or_create_user_from_oauth(%Auth{} = auth) do
-    Logger.info("find_or_create_user_from_oauth")
-
     Repo.transaction(fn ->
       user = find_or_create_user(auth.provider, auth.uid, auth.info.email)
 
-      Logger.info("find_or_create_user")
-      Logger.info(user)
-
       case find_or_create_user_credential(user, auth) do
-        {:ok, credential} ->
-          Logger.info("find_or_create_user_credential")
-          Logger.info(credential)
-
+        {:ok, _} ->
           user
 
         {:error, _} ->
-          Logger.info("cannot_create_user_credential")
           Repo.rollback(:cannot_create_user_credential)
       end
     end)
